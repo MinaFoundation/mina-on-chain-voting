@@ -201,3 +201,11 @@ launch-web: destroy-all image-build-web launch-server
     localhost/mina-ocv-web:latest \
     > {{ container_log_dir }}/web.out \
     2> {{ container_log_dir }}/web.err &
+
+bump-web-version:
+  cd web && pnpm bump-version
+  
+bump-server-version:
+  cd server && cargo bump minor
+
+bump-version: bump-web-version bump-server-version

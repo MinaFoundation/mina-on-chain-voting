@@ -15,7 +15,8 @@
     "lint": "next lint --no-cache && depcheck --skip-missing --ignores ts-node,jest-environment-jsdom,autoprefixer,cssnano",
     "start": "next start",
     "test": "jest --coverage",
-    "ts-lint": "tsc --noEmit --incremental"
+    "ts-lint": "tsc --noEmit --incremental",
+    "bump-version": "pnpm version minor"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.0.4",
