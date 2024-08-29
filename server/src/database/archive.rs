@@ -79,7 +79,6 @@ pub(crate) fn fetch_transactions(
         ON uc.source_id = pk.id
         WHERE uc.command_type = 'payment'
         AND uc.source_id = uc.receiver_id
-        AND uc.token = 1
         AND NOT b.chain_status = 'orphaned'
         AND buc.status = 'applied'
         AND b.timestamp::bigint BETWEEN $1 AND $2"
