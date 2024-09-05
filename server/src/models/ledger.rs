@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 use std::io::Read;
+use std::path::Path;
 
 use anyhow::anyhow;
 use anyhow::Context;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use tracing::error;
 
 use crate::config::NetworkConfig;
 use crate::models::diesel::ProposalVersion;
@@ -25,52 +25,40 @@ pub(crate) struct LedgerAccount {
     pub(crate) delegate: String,
 }
 
+// let url = "https://673156464838-mina-staking-ledgers.s3.us-west-2.amazonaws.com/mainnet/mainnet-74-jxvumaCvujr7UzW1qCB87YR2RWu8CqvkwrCmHY8kkwpvN4WbTJn.json.tar.gz";
+
 impl Ledger {
     pub(crate) async fn fetch(
         hash: impl Into<String>,
+        ledger_storage_path: String,
         network: NetworkConfig,
-        ledger_storage_location: &Option<String>,
+        bucket_name: String,
+        epoch: u16,
     ) -> Result<Ledger> {
-        let hash = hash.into();
-
-        match ledger_storage_location {
-            Some(ledger_storage_location) => {
-                let mut bytes = Vec::new();
-
-                std::fs::File::open(f!("{ledger_storage_location}/{hash}.json"))
-                    .with_context(|| f!("failed to open ledger {hash}"))?
-                    .read_to_end(&mut bytes)
-                    .with_context(|| f!("failed to read ledger {hash}"))?;
-
-                Ok(Ledger(serde_json::from_slice(&bytes).with_context(
-                    || f!("failed to deserialize ledger {hash}"),
-                )?))
-            }
-            None => {
-                let ledger_url = format!(
-                    "https://raw.githubusercontent.com/Granola-Team/mina-ledger/main/{network}/{hash}.json");
-
-                let ledger_response = reqwest::get(&ledger_url)
-                    .await
-                    .with_context(|| format!("failed to fetch ledger from URL: {ledger_url}"));
-
-                if let Err(error) = ledger_response {
-                    error!("The reason fetching ledger from URL failed: {error:?}");
-
-                    return Err(error.into());
-                }
-
-                let ledger_bytes = ledger_response
-                    .expect("Failed to fetch ledger response")
-                    .bytes()
-                    .await
-                    .with_context(|| "failed to parse ledger response body")?;
-
-                Ok(Ledger(serde_json::from_slice(&ledger_bytes).with_context(
-                    || format!("failed to deserialize ledger data from URL: {ledger_url}"),
-                )?))
+        let hash: String = hash.into();
+        let ledger_path_raw = f!("{ledger_storage_path}/{hash}");
+        let ledger_path = Path::new(&ledger_path_raw);
+        if !ledger_path.exists() {
+            let url = f!("https://{bucket_name}.s3.us-west-2.amazonaws.com/{network}/{network}-{epoch}-{hash}.json.tar.gz");
+            let response = reqwest::get(url).await.unwrap();
+            if response.status().is_success() {
+                // Get the object body as bytes
+                let body = response.bytes().await.unwrap();
+                let tar_gz = flate2::read::GzDecoder::new(&body[..]);
+                let mut archive = tar::Archive::new(tar_gz);
+                std::fs::create_dir_all(ledger_path).unwrap();
+                archive.unpack(ledger_path).unwrap();
             }
         }
+        let mut bytes = Vec::new();
+        let ledger_path_str = ledger_path.to_str().unwrap();
+        std::fs::File::open(f!("{ledger_path_str}/{network}-{epoch}-{hash}.json"))
+            .with_context(|| f!("failed to open ledger {hash}"))?
+            .read_to_end(&mut bytes)
+            .with_context(|| f!("failed to read ledger {hash}"))?;
+        Ok(Ledger(serde_json::from_slice(&bytes).with_context(
+            || f!("failed to deserialize ledger {hash}"),
+        )?))
     }
 
     pub(crate) fn get_stake_weight(
