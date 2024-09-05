@@ -59,7 +59,7 @@ pub(crate) struct Config {
     #[clap(long, env)]
     pub(crate) bucket_name: String,
     /// Path to store the ledgers
-    #[clap(long, env, default_value = "/ledgers")]
+    #[clap(long, env, default_value = "/tmp/ledgers")]
     pub(crate) ledger_storage_path: String,
 }
 

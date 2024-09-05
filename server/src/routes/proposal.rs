@@ -152,7 +152,7 @@ async fn get_mina_proposal_result(
                 ctx.ledger_storage_path.clone(),
                 ctx.network,
                 ctx.bucket_name.clone(),
-                74,
+                46,
             )
             .await?;
 

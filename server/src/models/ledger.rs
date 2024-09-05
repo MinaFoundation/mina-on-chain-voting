@@ -36,23 +36,32 @@ impl Ledger {
         epoch: u16,
     ) -> Result<Ledger> {
         let hash: String = hash.into();
-        let ledger_path_raw = f!("{ledger_storage_path}/{hash}");
-        let ledger_path = Path::new(&ledger_path_raw);
-        if !ledger_path.exists() {
+        let ledger_file_path = f!("{ledger_storage_path}/{network}-{epoch}-{hash}.json");
+        if !Path::new(&ledger_file_path).exists() {
+            if !Path::new(&ledger_storage_path).exists() {
+                let _ = std::fs::create_dir_all(ledger_storage_path.clone());
+            }
             let url = f!("https://{bucket_name}.s3.us-west-2.amazonaws.com/{network}/{network}-{epoch}-{hash}.json.tar.gz");
+            tracing::info!(
+                "Ledger path not found, downloading {} to {}",
+                url,
+                ledger_file_path
+            );
             let response = reqwest::get(url).await.unwrap();
             if response.status().is_success() {
                 // Get the object body as bytes
                 let body = response.bytes().await.unwrap();
+                tracing::info!("BODY received");
                 let tar_gz = flate2::read::GzDecoder::new(&body[..]);
+                tracing::info!("body deflated");
                 let mut archive = tar::Archive::new(tar_gz);
-                std::fs::create_dir_all(ledger_path).unwrap();
-                archive.unpack(ledger_path).unwrap();
+                tracing::info!("ledgers dir created");
+                archive.unpack(ledger_storage_path).unwrap();
+                tracing::info!("archive unpacked");
             }
         }
         let mut bytes = Vec::new();
-        let ledger_path_str = ledger_path.to_str().unwrap();
-        std::fs::File::open(f!("{ledger_path_str}/{network}-{epoch}-{hash}.json"))
+        std::fs::File::open(ledger_file_path)
             .with_context(|| f!("failed to open ledger {hash}"))?
             .read_to_end(&mut bytes)
             .with_context(|| f!("failed to read ledger {hash}"))?;
