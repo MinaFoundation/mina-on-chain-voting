@@ -1,0 +1,12 @@
+{
+  "type": "module",
+  "scripts": {
+    "vote": "tsx main.ts"
+  },
+  "dependencies": {
+    "@types/node": "^22.5.4",
+    "o1js": "^1.7.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
+  }
+}

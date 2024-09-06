@@ -20,3 +20,5 @@ tools/.vscode
 
 # Build directories
 tools/result
+
+vote_script/node_modules
