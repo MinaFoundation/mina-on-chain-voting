@@ -20,6 +20,7 @@ diesel::table! {
         key -> Text,
         start_time -> Int8,
         end_time -> Int8,
+        epoch -> Int8,
         ledger_hash -> Nullable<Text>,
         category -> ProposalCategory,
         version -> ProposalVersion,

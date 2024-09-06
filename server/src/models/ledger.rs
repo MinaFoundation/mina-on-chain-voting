@@ -33,7 +33,7 @@ impl Ledger {
         ledger_storage_path: String,
         network: NetworkConfig,
         bucket_name: String,
-        epoch: u16,
+        epoch: i64,
     ) -> Result<Ledger> {
         let hash: String = hash.into();
         let ledger_file_path = f!("{ledger_storage_path}/{network}-{epoch}-{hash}.json");

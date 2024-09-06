@@ -1034,6 +1034,7 @@ version = "0.3.0"
 dependencies = [
  "anyhow",
  "axum",
+ "bigdecimal",
  "bs58",
  "bytes",
  "clap",
