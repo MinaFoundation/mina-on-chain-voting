@@ -62,4 +62,18 @@ VALUES (
     'Easier zkApp programmability on mainnet',
     'Adding programmable smart contracts (zkApps) to the Mina protocol.',
     'https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-zkapps.md'
-  )
+  );
+INSERT INTO mina_proposals
+VALUES (
+    5,
+    'MIP50',
+    1684562400000,
+    1685253600000,
+    74,
+    'jwUfRQindewPk7Uep8z3YUjMvQKaq6drpKvJRTq47wGU6Dxkhqx',
+    'Core',
+    'V2',
+    'Testing Title',
+    'Testing Description',
+    'https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-zkapps.md'
+  );

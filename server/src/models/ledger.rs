@@ -22,7 +22,14 @@ pub(crate) struct Ledger(pub(crate) Vec<LedgerAccount>);
 pub(crate) struct LedgerAccount {
     pub(crate) pk: String,
     pub(crate) balance: String,
-    pub(crate) delegate: String,
+    pub(crate) delegate: Option<String>,
+}
+
+fn is_matching_public_key(delegate: &Option<String>, pk: &String) -> bool {
+    match delegate {
+        Some(v) => v == pk,
+        None => false,
+    }
 }
 
 // let url = "https://673156464838-mina-staking-ledgers.s3.us-west-2.amazonaws.com/mainnet/mainnet-74-jxvumaCvujr7UzW1qCB87YR2RWu8CqvkwrCmHY8kkwpvN4WbTJn.json.tar.gz";
@@ -62,9 +69,7 @@ impl Ledger {
             .unwrap()
             .read_to_end(&mut bytes)
             .unwrap();
-        Ok(Ledger(serde_json::from_slice(&bytes).with_context(
-            || f!("failed to deserialize ledger {hash}"),
-        )?))
+        Ok(Ledger(serde_json::from_slice(&bytes).unwrap()))
     }
 
     pub(crate) fn get_stake_weight(
@@ -73,7 +78,7 @@ impl Ledger {
         version: &ProposalVersion,
         public_key: impl Into<String>,
     ) -> Result<Decimal> {
-        let public_key = public_key.into();
+        let public_key: String = public_key.into();
 
         let account = self
             .0
@@ -88,14 +93,16 @@ impl Ledger {
 
         match version {
             ProposalVersion::V1 => {
-                if account.delegate != public_key {
+                if is_matching_public_key(&account.delegate, &public_key) {
                     return Ok(Decimal::new(0, LEDGER_BALANCE_SCALE));
                 }
 
                 let delegators = self
                     .0
                     .iter()
-                    .filter(|d| d.delegate == public_key && d.pk != public_key)
+                    .filter(|d| {
+                        is_matching_public_key(&d.delegate, &public_key) && d.pk != public_key
+                    })
                     .collect::<Vec<&LedgerAccount>>();
 
                 if delegators.is_empty() {
@@ -119,7 +126,9 @@ impl Ledger {
                     .0
                     .iter()
                     .filter(|d| {
-                        d.delegate == public_key && d.pk != public_key && !map.0.contains_key(&d.pk)
+                        is_matching_public_key(&d.delegate, &public_key)
+                            && d.pk != public_key
+                            && !map.0.contains_key(&d.pk)
                     })
                     .collect::<Vec<&LedgerAccount>>();
 
@@ -152,7 +161,7 @@ mod tests {
             LedgerAccount {
                 pk,
                 balance,
-                delegate,
+                delegate: Some(delegate),
             }
         }
     }
