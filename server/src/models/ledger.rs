@@ -51,13 +51,9 @@ impl Ledger {
             if response.status().is_success() {
                 // Get the object body as bytes
                 let body = response.bytes().await.unwrap();
-                tracing::info!("BODY received");
                 let tar_gz = flate2::read::GzDecoder::new(&body[..]);
-                tracing::info!("body deflated");
                 let mut archive = tar::Archive::new(tar_gz);
-                tracing::info!("ledgers dir created");
                 archive.unpack(ledger_storage_path).unwrap();
-                tracing::info!("archive unpacked");
             }
         }
         let mut bytes = Vec::new();
