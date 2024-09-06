@@ -57,10 +57,11 @@ impl Ledger {
             }
         }
         let mut bytes = Vec::new();
+        println!("Trying to access: {}", ledger_file_path);
         std::fs::File::open(ledger_file_path)
-            .with_context(|| f!("failed to open ledger {hash}"))?
+            .unwrap()
             .read_to_end(&mut bytes)
-            .with_context(|| f!("failed to read ledger {hash}"))?;
+            .unwrap();
         Ok(Ledger(serde_json::from_slice(&bytes).with_context(
             || f!("failed to deserialize ledger {hash}"),
         )?))
