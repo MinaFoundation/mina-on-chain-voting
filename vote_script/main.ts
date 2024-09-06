@@ -1,6 +1,6 @@
-import { PrivateKey, Mina, AccountUpdate, UInt64 } from "o1js";
+import { PrivateKey, Mina, AccountUpdate } from "o1js";
 
-let [, , network, vote, skRaw] = process.argv;
+let [, , network, vote, skRaw, feeRaw] = process.argv;
 if (
   network &&
   !!!(
@@ -47,6 +47,14 @@ if (!skRaw) {
     "Must supply private key as 3rd argument in order to sign the vote transaction"
   );
 }
+if (!feeRaw) throw new Error("Must specify fee as fourth argument");
+const fee = (() => {
+  try {
+    return parseInt(feeRaw);
+  } catch (_e) {
+    throw new Error(`Specified fee is not an integer`);
+  }
+})();
 
 const sk = PrivateKey.fromBase58(skRaw);
 const pk = sk.toPublicKey();
@@ -55,11 +63,16 @@ Mina.setActiveInstance(
   Mina.Network(`https://${network}.minaprotocol.network/graphql`)
 );
 
-await Mina.transaction({ fee: 1, memo: vote, sender: pk }, async function () {
-  const au = AccountUpdate.create(pk);
-  au.send({ to: pk, amount: 1 });
-})
-  .sign([sk])
-  .prove()
-  .send()
-  .wait();
+try {
+  await Mina.transaction({ fee, memo: vote, sender: pk }, async function () {
+    const au = AccountUpdate.create(pk);
+    au.send({ to: pk, amount: 1 });
+  })
+    .sign([sk])
+    .prove()
+    .send()
+    .wait();
+} catch (e) {
+  if (e instanceof Error) console.error(e.message);
+  throw e;
+}
