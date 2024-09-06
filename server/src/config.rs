@@ -17,7 +17,8 @@ pub(crate) struct Context {
     pub(crate) cache: Arc<CacheManager>,
     pub(crate) conn_manager: Arc<DBConnectionManager>,
     pub(crate) network: NetworkConfig,
-    pub(crate) ledger_storage_path: Option<String>,
+    pub(crate) ledger_storage_path: String,
+    pub(crate) bucket_name: String,
 }
 
 #[derive(Clone, Copy, Parser, ValueEnum, Debug)]
@@ -54,9 +55,12 @@ pub(crate) struct Config {
     /// Origins allowed to make cross-site requests.
     #[clap(long, env = "SERVER_ALLOWED_ORIGINS", value_parser = parse_allowed_origins )]
     pub(crate) allowed_origins: HashSet<String>,
-    /// Override ledger storage location.
+    /// Set the name of the bucket containing the ledgers
     #[clap(long, env)]
-    pub(crate) ledger_storage_path: Option<String>,
+    pub(crate) bucket_name: String,
+    /// Path to store the ledgers
+    #[clap(long, env, default_value = "/tmp/ledgers")]
+    pub(crate) ledger_storage_path: String,
 }
 
 #[allow(clippy::unnecessary_wraps)]

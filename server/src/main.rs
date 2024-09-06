@@ -6,7 +6,7 @@ use tokio::signal;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 
-use crate::config::{Context, Config};
+use crate::config::{Config, Context};
 use crate::database::{cache::CacheManager, DBConnectionManager};
 use crate::prelude::*;
 use crate::routes::Build;
@@ -47,6 +47,7 @@ async fn main() -> Result<()> {
                 conn_manager: Arc::new(conn_manager),
                 network: config.mina_network,
                 ledger_storage_path: config.ledger_storage_path,
+                bucket_name: config.bucket_name,
             })),
     );
 
