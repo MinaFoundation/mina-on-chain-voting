@@ -66,7 +66,7 @@ Mina.setActiveInstance(
 try {
   await Mina.transaction({ fee, memo: vote, sender: pk }, async function () {
     const au = AccountUpdate.create(pk);
-    au.send({ to: pk, amount: 1 });
+    au.send({ to: pk, amount: 1e9 });
   })
     .sign([sk])
     .prove()
