@@ -1,15 +1,12 @@
-use std::collections::HashMap;
-use std::io::Read;
-use std::path::Path;
-
+use crate::{
+  config::NetworkConfig,
+  models::{diesel::ProposalVersion, vote::MinaVote},
+  prelude::*,
+};
 use anyhow::anyhow;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-
-use crate::config::NetworkConfig;
-use crate::models::diesel::ProposalVersion;
-use crate::models::vote::MinaVote;
-use crate::prelude::*;
+use std::{collections::HashMap, io::Read, path::Path};
 
 const LEDGER_BALANCE_SCALE: u32 = 9;
 

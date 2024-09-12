@@ -1,11 +1,11 @@
-use diesel::prelude::*;
-use diesel::r2d2::ConnectionManager;
-use diesel::r2d2::Pool;
-
-use crate::config::Config;
-
 pub(crate) mod archive;
 pub(crate) mod cache;
+
+use crate::config::Config;
+use diesel::{
+  prelude::*,
+  r2d2::{ConnectionManager, Pool},
+};
 
 pub(crate) type PgConnectionPool = Pool<ConnectionManager<PgConnection>>;
 

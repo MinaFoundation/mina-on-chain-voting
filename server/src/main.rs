@@ -1,17 +1,3 @@
-use axum::Extension;
-use clap::Parser;
-use std::net::SocketAddr;
-use std::sync::Arc;
-use tokio::signal;
-use tower::ServiceBuilder;
-use tower_http::trace::TraceLayer;
-
-use crate::config::Config;
-use crate::config::Context;
-use crate::database::{cache::CacheManager, DBConnectionManager};
-use crate::prelude::*;
-use crate::routes::Build;
-
 mod config;
 mod database;
 mod error;
@@ -19,6 +5,19 @@ mod models;
 mod prelude;
 mod routes;
 mod schema;
+
+use crate::{
+  config::{Config, Context},
+  database::{cache::CacheManager, DBConnectionManager},
+  prelude::*,
+  routes::Build,
+};
+use axum::Extension;
+use clap::Parser;
+use std::{net::SocketAddr, sync::Arc};
+use tokio::signal;
+use tower::ServiceBuilder;
+use tower_http::trace::TraceLayer;
 
 extern crate tracing;
 

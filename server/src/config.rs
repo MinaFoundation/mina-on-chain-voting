@@ -1,16 +1,12 @@
-use axum::http::HeaderValue;
-use axum::http::Method;
+use crate::{
+  database::{cache::CacheManager, DBConnectionManager},
+  prelude::*,
+};
+use axum::http::{HeaderValue, Method};
 use clap::{Parser, ValueEnum};
-use std::collections::HashSet;
-use std::fmt;
-use std::sync::Arc;
-use tower_http::cors::Any;
-use tower_http::cors::CorsLayer;
+use std::{collections::HashSet, fmt, sync::Arc};
+use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::EnvFilter;
-
-use crate::database::cache::CacheManager;
-use crate::database::DBConnectionManager;
-use crate::prelude::*;
 
 #[derive(Clone)]
 pub(crate) struct Context {

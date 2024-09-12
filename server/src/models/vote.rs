@@ -1,14 +1,14 @@
+use crate::{
+  database::archive::FetchTransactionResult,
+  models::{diesel::MinaProposal, ledger::Ledger},
+  prelude::*,
+};
 use anyhow::Context;
 use diesel::SqlType;
 use diesel_derive_enum::DbEnum;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::collections::{hash_map::Entry, HashMap};
-
-use crate::database::archive::FetchTransactionResult;
-use crate::models::diesel::MinaProposal;
-use crate::models::ledger::Ledger;
-use crate::prelude::*;
 
 #[derive(SqlType)]
 #[diesel(postgres_type(name = "chain_status_type"))]
@@ -106,7 +106,7 @@ impl MinaVote {
       .into_vec()
       .with_context(|| f!("failed to decode memo {} - bs58", &self.memo))?;
 
-    let value = &decoded[3..decoded[2] as usize + 3];
+    let value = &decoded[3 .. decoded[2] as usize + 3];
 
     Ok(String::from_utf8(value.to_vec()).with_context(|| f!("failed to decode memo {} - from_utf8", &self.memo))?)
   }

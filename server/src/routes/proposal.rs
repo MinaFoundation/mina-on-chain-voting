@@ -1,21 +1,18 @@
+use crate::{
+  database::archive::{fetch_chain_tip, fetch_transactions},
+  models::{
+    diesel::MinaProposal,
+    ledger::Ledger,
+    vote::{MinaVote, MinaVoteWithWeight},
+  },
+  prelude::*,
+};
 use anyhow::Context;
-use axum::extract::Path;
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
-use axum::routing::get;
-use axum::{Extension, Json, Router};
+use axum::{extract::Path, http::StatusCode, response::IntoResponse, routing::get, Extension, Json, Router};
 use diesel::prelude::*;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-
-use crate::database::archive::fetch_chain_tip;
-use crate::database::archive::fetch_transactions;
-use crate::models::diesel::MinaProposal;
-use crate::models::ledger::Ledger;
-use crate::models::vote::MinaVote;
-use crate::models::vote::MinaVoteWithWeight;
-use crate::prelude::*;
 
 pub(crate) fn router() -> Router {
   Router::new()

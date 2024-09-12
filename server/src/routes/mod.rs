@@ -1,7 +1,7 @@
-use axum::Router;
-
 mod info;
 mod proposal;
+
+use axum::Router;
 
 pub(crate) trait Build {
   fn build() -> Router;

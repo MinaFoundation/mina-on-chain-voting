@@ -1,9 +1,9 @@
+use crate::models::{
+  ledger::LedgerAccount,
+  vote::{MinaVote, MinaVoteWithWeight},
+};
 use moka::future::Cache as MokaCache;
 use std::sync::Arc;
-
-use crate::models::ledger::LedgerAccount;
-use crate::models::vote::MinaVote;
-use crate::models::vote::MinaVoteWithWeight;
 
 type ArcVotes = Arc<Vec<MinaVote>>;
 type ArcVotesWeighted = Arc<Vec<MinaVoteWithWeight>>;

@@ -1,10 +1,14 @@
+use crate::{
+  database::DBConnectionManager,
+  models::vote::{ChainStatusType, MinaBlockStatus},
+  prelude::*,
+};
 use anyhow::Context;
-use diesel::sql_types::{BigInt, Text};
-use diesel::{sql_query, QueryableByName, RunQueryDsl};
-
-use crate::database::DBConnectionManager;
-use crate::models::vote::{ChainStatusType, MinaBlockStatus};
-use crate::prelude::*;
+use diesel::{
+  sql_query,
+  sql_types::{BigInt, Text},
+  QueryableByName, RunQueryDsl,
+};
 
 #[derive(QueryableByName)]
 pub(crate) struct FetchChainTipResult {
