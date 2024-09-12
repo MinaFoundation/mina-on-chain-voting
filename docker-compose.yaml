@@ -1,7 +1,7 @@
 services:
   web:
     container_name: web
-    profiles: [ "all", "web" ]
+    profiles: ["all", "web"]
     build:
       context: ./web
       dockerfile: Dockerfile
@@ -14,7 +14,7 @@ services:
       - 3000:3000
   server:
     container_name: server
-    profiles: [ "all", "server-db", "server" ]
+    profiles: ["all", "server-db", "server"]
     image: ocv-server
     build:
       context: ./server
@@ -30,7 +30,7 @@ services:
       - db
   db:
     container_name: postgres
-    profiles: [ "all", "server-db", "db" ]
+    profiles: ["all", "server-db", "db"]
     image: postgres:15.2
     ports:
       - 5432:5432
@@ -38,3 +38,5 @@ services:
       POSTGRES_USER: granola
       POSTGRES_PASSWORD: systems
       POSTGRES_DB: db
+    tmpfs:
+      - /var/lib/postgresql/data
