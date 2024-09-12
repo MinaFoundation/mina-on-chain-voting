@@ -6,10 +6,6 @@ On-Chain Voting is a protocol developed to help with governing the Mina L1 block
 
 1. Ensure you're on the correct network (in this case devnet).
 2. Click on your address to copy it to the clipboard (we'll be using it in the next step).
-
-> Note: you must use an account which exists in the accounts ledger for the previous epoch. If you
-> create and utilize a brand new account, your vote will not be counted.
-
 3. Click on "Send."
 
 ![Ouro Home](./ouro_screens/1.home.png)

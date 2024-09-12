@@ -25,6 +25,7 @@ pub(crate) const MINA_GOVERNANCE_SERVER: &str = "mina_governance_server";
 
 #[tokio::main]
 async fn main() -> Result<()> {
+  println!("Let's see!");
   config::init_tracing();
 
   let config = Config::parse();
