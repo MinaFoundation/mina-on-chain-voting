@@ -22,15 +22,11 @@ pub(crate) struct CacheManager {
 impl CacheManager {
   pub(crate) fn build() -> CacheManager {
     CacheManager {
-      votes: VotesCache::builder()
-        .time_to_live(std::time::Duration::from_secs(60 * 5))
-        .build(),
+      votes: VotesCache::builder().time_to_live(std::time::Duration::ZERO).build(),
       votes_weighted: VotesWeightedCache::builder()
-        .time_to_live(std::time::Duration::from_secs(60 * 5))
+        .time_to_live(std::time::Duration::ZERO)
         .build(),
-      ledger: LedgerCache::builder()
-        .time_to_live(std::time::Duration::from_secs(60 * 60 * 12))
-        .build(),
+      ledger: LedgerCache::builder().time_to_live(std::time::Duration::ZERO).build(),
     }
   }
 }
