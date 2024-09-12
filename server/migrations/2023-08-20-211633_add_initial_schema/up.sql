@@ -69,11 +69,11 @@ VALUES (
     'MIP50',
     1684562400000,
     1685253600000,
-    74,
+    73,
     'jwUfRQindewPk7Uep8z3YUjMvQKaq6drpKvJRTq47wGU6Dxkhqx',
     'Core',
     'V2',
-    'Testing Title',
-    'Testing Description',
+    'Devnet Testing Title',
+    'Devnet Testing Description',
     'https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-zkapps.md'
   );
