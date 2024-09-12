@@ -1,5 +1,5 @@
 ### build server
-FROM rust:bullseye as builder
+FROM rust:bullseye AS builder
 ENV USER=mina
 ENV UID=1001
 RUN adduser \

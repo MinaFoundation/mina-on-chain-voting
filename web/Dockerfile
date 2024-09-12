@@ -14,8 +14,8 @@ RUN cp -a /src/.next/standalone/. .
 RUN cp -a /src/.next/static .next/
 RUN cp -a /src/start .
 ENV NODE_ENV=production
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 EXPOSE 3000
 
 ENTRYPOINT ["/app/start"]

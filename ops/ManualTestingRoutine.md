@@ -11,7 +11,8 @@
 - Log into the Archive Node DB with your tool of choice. (Postico, PGAdmin etc.)
 - Go to the "mainnet" database.
 - On the "blocks" table get the most recent block by height.
-- Go to Mina Explorer (https://minaexplorer.com/) & compare the most recent block with Mina Explorer.
+- Go to Mina Explorer (https://minaexplorer.com/) & compare the most recent block with Mina
+  Explorer.
 - If they match up - we're still synced.
 
 - From your tool of choice run the following queries:
@@ -41,7 +42,8 @@ Select count(*) from blocks where parent_id is null
 ##### If there are any missing blocks, use the following tools and commands in your archive node instance to check and add blocks:
 
 - mina-missing-blocks-auditor -- returns state hashes of missing blocks from the archive database.
-- mina-extract-blocks -- extracts all blocks from said database or a chain if the command is provided with `--start-state-hash` and or `--end-state-hash`.
+- mina-extract-blocks -- extracts all blocks from said database or a chain if the command is
+  provided with `--start-state-hash` and or `--end-state-hash`.
 - mina-archive-blocks -- writes blocks to the database.
 - mina-replayer -- replays transactions from the archive node.
 

@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 #[ExistingTypePath = "crate::schema::sql_types::ProposalVersion"]
 #[DbValueStyle = "SCREAMING_SNAKE_CASE"]
 pub(crate) enum ProposalVersion {
-    V1,
-    V2,
+  V1,
+  V2,
 }
 
 #[allow(clippy::upper_case_acronyms)]
@@ -15,24 +15,24 @@ pub(crate) enum ProposalVersion {
 #[ExistingTypePath = "crate::schema::sql_types::ProposalCategory"]
 #[DbValueStyle = "verbatim"]
 pub(crate) enum ProposalCategory {
-    Core,
-    Networking,
-    Interface,
-    ERC,
-    Cryptography,
+  Core,
+  Networking,
+  Interface,
+  ERC,
+  Cryptography,
 }
 
 #[derive(Queryable, Serialize, Deserialize, Debug)]
 pub(crate) struct MinaProposal {
-    pub(crate) id: i32,
-    pub(crate) key: String,
-    pub(crate) start_time: i64,
-    pub(crate) end_time: i64,
-    pub(crate) epoch: i64,
-    pub(crate) ledger_hash: Option<String>,
-    pub(crate) category: ProposalCategory,
-    pub(crate) version: ProposalVersion,
-    pub(crate) title: String,
-    pub(crate) description: String,
-    pub(crate) url: String,
+  pub(crate) id: i32,
+  pub(crate) key: String,
+  pub(crate) start_time: i64,
+  pub(crate) end_time: i64,
+  pub(crate) epoch: i64,
+  pub(crate) ledger_hash: Option<String>,
+  pub(crate) category: ProposalCategory,
+  pub(crate) version: ProposalVersion,
+  pub(crate) title: String,
+  pub(crate) description: String,
+  pub(crate) url: String,
 }

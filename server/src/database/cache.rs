@@ -14,23 +14,23 @@ pub(crate) type VotesWeightedCache = MokaCache<String, ArcVotesWeighted>;
 pub(crate) type LedgerCache = MokaCache<String, ArcLedger>;
 
 pub(crate) struct CacheManager {
-    pub(crate) votes: VotesCache,
-    pub(crate) votes_weighted: VotesWeightedCache,
-    pub(crate) ledger: LedgerCache,
+  pub(crate) votes: VotesCache,
+  pub(crate) votes_weighted: VotesWeightedCache,
+  pub(crate) ledger: LedgerCache,
 }
 
 impl CacheManager {
-    pub(crate) fn build() -> CacheManager {
-        CacheManager {
-            votes: VotesCache::builder()
-                .time_to_live(std::time::Duration::from_secs(60 * 5))
-                .build(),
-            votes_weighted: VotesWeightedCache::builder()
-                .time_to_live(std::time::Duration::from_secs(60 * 5))
-                .build(),
-            ledger: LedgerCache::builder()
-                .time_to_live(std::time::Duration::from_secs(60 * 60 * 12))
-                .build(),
-        }
+  pub(crate) fn build() -> CacheManager {
+    CacheManager {
+      votes: VotesCache::builder()
+        .time_to_live(std::time::Duration::from_secs(60 * 5))
+        .build(),
+      votes_weighted: VotesWeightedCache::builder()
+        .time_to_live(std::time::Duration::from_secs(60 * 5))
+        .build(),
+      ledger: LedgerCache::builder()
+        .time_to_live(std::time::Duration::from_secs(60 * 60 * 12))
+        .build(),
     }
+  }
 }
