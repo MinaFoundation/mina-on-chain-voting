@@ -3,7 +3,6 @@ use std::io::Read;
 use std::path::Path;
 
 use anyhow::anyhow;
-use anyhow::Context;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
@@ -31,8 +30,6 @@ fn is_matching_public_key(delegate: &Option<String>, pk: &String) -> bool {
         None => false,
     }
 }
-
-// let url = "https://673156464838-mina-staking-ledgers.s3.us-west-2.amazonaws.com/mainnet/mainnet-74-jxvumaCvujr7UzW1qCB87YR2RWu8CqvkwrCmHY8kkwpvN4WbTJn.json.tar.gz";
 
 impl Ledger {
     pub(crate) async fn fetch(

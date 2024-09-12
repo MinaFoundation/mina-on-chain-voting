@@ -1,4 +1,4 @@
-import { PrivateKey, Mina, AccountUpdate } from "o1js";
+import { PrivateKey, Mina, AccountUpdate, Provable } from "o1js";
 
 let [, , network, vote, skRaw, feeRaw] = process.argv;
 if (
@@ -64,14 +64,12 @@ Mina.setActiveInstance(
 );
 
 try {
-  await Mina.transaction({ fee, memo: vote, sender: pk }, async function () {
+  let tx = Mina.transaction({ fee, memo: vote, sender: pk }, async function () {
     const au = AccountUpdate.create(pk);
-    au.send({ to: pk, amount: 1e9 });
-  })
-    .sign([sk])
-    .prove()
-    .send()
-    .wait();
+    au.send({ to: pk, amount: 1_000_000_000 });
+  });
+  Provable.log(await tx);
+  await tx.sign([sk]).prove().send().wait();
 } catch (e) {
   if (e instanceof Error) console.error(e.message);
   throw e;
