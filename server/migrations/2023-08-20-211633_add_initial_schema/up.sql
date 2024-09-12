@@ -67,8 +67,8 @@ INSERT INTO mina_proposals
 VALUES (
     5,
     'MIP50',
-    1684562400000,
-    1685253600000,
+    1722981771000,
+    1728252171000,
     73,
     'jwUfRQindewPk7Uep8z3YUjMvQKaq6drpKvJRTq47wGU6Dxkhqx',
     'Core',
