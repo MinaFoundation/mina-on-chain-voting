@@ -24,13 +24,6 @@ pub(crate) struct LedgerAccount {
     pub(crate) delegate: Option<String>,
 }
 
-fn is_matching_public_key(delegate: &Option<String>, pk: &String) -> bool {
-    match delegate {
-        Some(v) => v == pk,
-        None => false,
-    }
-}
-
 impl Ledger {
     pub(crate) async fn fetch(
         hash: impl Into<String>,
@@ -90,7 +83,7 @@ impl Ledger {
 
         match version {
             ProposalVersion::V1 => {
-                if is_matching_public_key(&account.delegate, &public_key) {
+                if account.delegate.clone().unwrap_or(public_key.clone()) != public_key {
                     return Ok(Decimal::new(0, LEDGER_BALANCE_SCALE));
                 }
 
@@ -98,7 +91,8 @@ impl Ledger {
                     .0
                     .iter()
                     .filter(|d| {
-                        is_matching_public_key(&d.delegate, &public_key) && d.pk != public_key
+                        d.delegate.clone().unwrap_or(d.pk.clone()) == public_key
+                            && d.pk != public_key
                     })
                     .collect::<Vec<&LedgerAccount>>();
 
@@ -123,7 +117,7 @@ impl Ledger {
                     .0
                     .iter()
                     .filter(|d| {
-                        is_matching_public_key(&d.delegate, &public_key)
+                        d.delegate.clone().unwrap_or(d.pk.clone()) == public_key
                             && d.pk != public_key
                             && !map.0.contains_key(&d.pk)
                     })
@@ -154,11 +148,11 @@ mod tests {
     use super::*;
 
     impl LedgerAccount {
-        pub fn new(pk: String, balance: String, delegate: String) -> LedgerAccount {
+        pub fn new(pk: String, balance: String, delegate: Option<String>) -> LedgerAccount {
             LedgerAccount {
                 pk,
                 balance,
-                delegate: Some(delegate),
+                delegate,
             }
         }
     }
@@ -170,13 +164,13 @@ mod tests {
         LedgerAccount,
         LedgerAccount,
     ) {
-        return (
-            LedgerAccount::new("A".to_string(), "1".to_string(), "A".to_string()),
-            LedgerAccount::new("B".to_string(), "1".to_string(), "B".to_string()),
-            LedgerAccount::new("C".to_string(), "1".to_string(), "A".to_string()),
-            LedgerAccount::new("D".to_string(), "1".to_string(), "A".to_string()),
-            LedgerAccount::new("E".to_string(), "1".to_string(), "B".to_string()),
-        );
+        (
+            LedgerAccount::new("A".to_string(), "1".to_string(), None),
+            LedgerAccount::new("B".to_string(), "1".to_string(), None),
+            LedgerAccount::new("C".to_string(), "1".to_string(), Some("A".to_string())),
+            LedgerAccount::new("D".to_string(), "1".to_string(), Some("A".to_string())),
+            LedgerAccount::new("E".to_string(), "1".to_string(), Some("B".to_string())),
+        )
     }
 
     fn get_votes() -> HashMap<String, MinaVote> {
