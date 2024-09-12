@@ -77,3 +77,17 @@ VALUES (
     'Devnet Testing Description',
     'https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-zkapps.md'
   );
+INSERT INTO mina_proposals
+VALUES (
+    6,
+    'MIP51',
+    1726170486000,
+    1726789686000,
+    73,
+    'jwUfRQindewPk7Uep8z3YUjMvQKaq6drpKvJRTq47wGU6Dxkhqx',
+    'Core',
+    'V2',
+    'Devnet Testing Title',
+    'Devnet Testing Description',
+    'https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-zkapps.md'
+  );
