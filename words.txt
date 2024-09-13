@@ -1,4 +1,5 @@
 codebases
+delegators
 devnet
 lightnet
 mina

@@ -8,7 +8,6 @@ mod prelude;
 mod proposals;
 mod vote;
 
-use anyhow::Context as AnyhowContext;
 use axum::{routing::get, Extension, Router};
 use cache::CacheManager;
 use clap::Parser;
@@ -35,7 +34,7 @@ async fn main() -> Result<()> {
   let config = Config::parse();
   let cache = CacheManager::build();
   let cors = config::init_cors(&config);
-  let manifest = MinaProposalManifest::load().await?;
+  let manifest = MinaProposalManifest::load(config.maybe_proposals_url).await?;
 
   tracing::info!(
     target: MINA_GOVERNANCE_SERVER,
@@ -70,8 +69,8 @@ async fn serve(router: axum::Router, port: u16) {
   let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
   tracing::info!(
-      target: MINA_GOVERNANCE_SERVER,
-      "Started server on {addr} - http://{addr}"
+    target: MINA_GOVERNANCE_SERVER,
+    "Started server on {addr} - http://{addr}"
   );
 
   axum::Server::bind(&addr)
@@ -98,8 +97,8 @@ async fn shutdown() {
   let terminate = std::future::pending::<()>();
 
   tokio::select! {
-      () = windows => {},
-      () = unix => {},
+    () = windows => {},
+    () = unix => {},
   }
 
   println!("Signal received - starting graceful shutdown...");

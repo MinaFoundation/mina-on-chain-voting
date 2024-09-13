@@ -8,6 +8,10 @@
       "items": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "number",
+            "description": "The ID of the proposal"
+          },
           "key": {
             "type": "string",
             "description": "Key string of the proposal"
@@ -57,6 +61,7 @@
           }
         },
         "required": [
+          "id",
           "key",
           "start_time",
           "end_time",

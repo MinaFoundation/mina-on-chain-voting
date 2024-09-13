@@ -41,6 +41,9 @@ pub struct Config {
   /// The mina network to connect to.
   #[clap(long, env)]
   pub mina_network: NetworkConfig,
+  /// The URL from which the `proposals.json` should be fetched.
+  #[clap(long, env = "PROPOSALS_URL")]
+  pub maybe_proposals_url: Option<String>,
   /// The connection URL for the archive database.
   #[clap(long, env)]
   pub archive_database_url: String,

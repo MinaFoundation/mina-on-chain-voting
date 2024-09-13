@@ -2,6 +2,7 @@
   "$schema": "./proposals_schema.json",
   "proposals": [
     {
+      "id": 0,
       "key": "MIP1",
       "category": "Core",
       "title": "Remove supercharged rewards",
@@ -15,6 +16,7 @@
       "network": "mainnet"
     },
     {
+      "id": 1,
       "key": "MIP3",
       "category": "Cryptography",
       "title": "Kimchi, a new proof system",
@@ -28,6 +30,7 @@
       "network": "mainnet"
     },
     {
+      "id": 2,
       "key": "MIP4",
       "category": "Core",
       "title": "Easier zkApp programmability on mainnet",
@@ -41,6 +44,7 @@
       "network": "mainnet"
     },
     {
+      "id": 3,
       "key": "MIP50",
       "category": "Core",
       "title": "",
@@ -54,6 +58,7 @@
       "network": "devnet"
     },
     {
+      "id": 4,
       "key": "MIP51",
       "category": "Core",
       "title": "",
@@ -67,6 +72,7 @@
       "network": "devnet"
     },
     {
+      "id": 5,
       "key": "MIP52",
       "category": "Core",
       "title": "",

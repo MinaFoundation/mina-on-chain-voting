@@ -40,4 +40,4 @@ COPY --chown=mina:mina . .
 RUN cargo build --release
 
 # start the server
-CMD ["./start"]
+CMD ["./target/release/mina-ocv-server"]
