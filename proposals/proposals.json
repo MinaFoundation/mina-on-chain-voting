@@ -1,0 +1,83 @@
+{
+  "$schema": "./proposals_schema.json",
+  "proposals": [
+    {
+      "key": "MIP1",
+      "category": "Core",
+      "title": "Remove supercharged rewards",
+      "description": "Removing the short-term incentive of supercharged rewards.",
+      "start_time": 1672848000000,
+      "end_time": 1673685000000,
+      "epoch": 46,
+      "ledger_hash": "jxQXzUkst2L9Ma9g9YQ3kfpgB5v5Znr1vrYb1mupakc5y7T89H8",
+      "url": "https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-remove-supercharged-rewards.md",
+      "version": "V1",
+      "network": "mainnet"
+    },
+    {
+      "key": "MIP3",
+      "category": "Cryptography",
+      "title": "Kimchi, a new proof system",
+      "description": "Kimchi is an update to the proof system currently used by Mina.",
+      "start_time": 1684562400000,
+      "end_time": 1685253600000,
+      "epoch": 55,
+      "ledger_hash": "jw8dXuUqXVgd6NvmpryGmFLnRv1176oozHAro8gMFwj8yuvhBeS",
+      "url": "https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-kimchi.md",
+      "version": "V2",
+      "network": "mainnet"
+    },
+    {
+      "key": "MIP4",
+      "category": "Core",
+      "title": "Easier zkApp programmability on mainnet",
+      "description": "Adding programmable smart contracts (zkApps) to the Mina protocol.",
+      "start_time": 1684562400000,
+      "end_time": 1685253600000,
+      "epoch": 55,
+      "ledger_hash": "jw8dXuUqXVgd6NvmpryGmFLnRv1176oozHAro8gMFwj8yuvhBeS",
+      "url": "https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-zkapps.md",
+      "version": "V2",
+      "network": "mainnet"
+    },
+    {
+      "key": "MIP50",
+      "category": "Core",
+      "title": "",
+      "description": "",
+      "start_time": 1726170486000,
+      "end_time": 1726789686000,
+      "epoch": 73,
+      "ledger_hash": "jw8dXuUqXVgd6NvmpryGmFLnRv1176oozHAro8gMFwj8yuvhBeS",
+      "url": "",
+      "version": "V2",
+      "network": "devnet"
+    },
+    {
+      "key": "MIP51",
+      "category": "Core",
+      "title": "",
+      "description": "",
+      "start_time": 1726170486000,
+      "end_time": 1726789686000,
+      "epoch": 73,
+      "ledger_hash": "jw8dXuUqXVgd6NvmpryGmFLnRv1176oozHAro8gMFwj8yuvhBeS",
+      "url": "",
+      "version": "V2",
+      "network": "devnet"
+    },
+    {
+      "key": "MIP52",
+      "category": "Core",
+      "title": "",
+      "description": "",
+      "start_time": 1726170486000,
+      "end_time": 1726789686000,
+      "epoch": 73,
+      "ledger_hash": "jw8dXuUqXVgd6NvmpryGmFLnRv1176oozHAro8gMFwj8yuvhBeS",
+      "url": "",
+      "version": "V2",
+      "network": "devnet"
+    }
+  ]
+}

@@ -1,8 +1,4 @@
-use crate::{
-  config::NetworkConfig,
-  models::{diesel::ProposalVersion, vote::MinaVote},
-  prelude::*,
-};
+use crate::{config::NetworkConfig, prelude::*, MinaVote, ProposalVersion};
 use anyhow::anyhow;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -11,18 +7,18 @@ use std::{collections::HashMap, io::Read, path::Path};
 const LEDGER_BALANCE_SCALE: u32 = 9;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
-pub(crate) struct Ledger(pub(crate) Vec<LedgerAccount>);
+pub struct Ledger(pub Vec<LedgerAccount>);
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct LedgerAccount {
-  pub(crate) pk: String,
-  pub(crate) balance: String,
-  pub(crate) delegate: Option<String>,
+pub struct LedgerAccount {
+  pub pk: String,
+  pub balance: String,
+  pub delegate: Option<String>,
 }
 
 impl Ledger {
-  pub(crate) async fn fetch(
+  pub async fn fetch(
     hash: impl Into<String>,
     ledger_storage_path: String,
     network: NetworkConfig,
@@ -48,14 +44,11 @@ impl Ledger {
     }
     let mut bytes = Vec::new();
     println!("Trying to access: {}", ledger_file_path);
-    std::fs::File::open(ledger_file_path)
-      .unwrap()
-      .read_to_end(&mut bytes)
-      .unwrap();
+    std::fs::File::open(ledger_file_path).unwrap().read_to_end(&mut bytes).unwrap();
     Ok(Ledger(serde_json::from_slice(&bytes).unwrap()))
   }
 
-  pub(crate) fn get_stake_weight(
+  pub fn get_stake_weight(
     &self,
     map: &Wrapper<HashMap<String, MinaVote>>,
     version: &ProposalVersion,
@@ -63,16 +56,10 @@ impl Ledger {
   ) -> Result<Decimal> {
     let public_key: String = public_key.into();
 
-    let account = self
-      .0
-      .iter()
-      .find(|d| d.pk == public_key)
-      .ok_or_else(|| anyhow!("account {public_key} not found in ledger"))?;
+    let account =
+      self.0.iter().find(|d| d.pk == public_key).ok_or_else(|| anyhow!("account {public_key} not found in ledger"))?;
 
-    let balance = account
-      .balance
-      .parse()
-      .unwrap_or_else(|_| Decimal::new(0, LEDGER_BALANCE_SCALE));
+    let balance = account.balance.parse().unwrap_or_else(|_| Decimal::new(0, LEDGER_BALANCE_SCALE));
 
     match version {
       ProposalVersion::V1 => {
@@ -91,10 +78,7 @@ impl Ledger {
         }
 
         let stake_weight = delegators.iter().fold(Decimal::new(0, LEDGER_BALANCE_SCALE), |acc, x| {
-          x.balance
-            .parse()
-            .unwrap_or_else(|_| Decimal::new(0, LEDGER_BALANCE_SCALE))
-            + acc
+          x.balance.parse().unwrap_or_else(|_| Decimal::new(0, LEDGER_BALANCE_SCALE)) + acc
         });
 
         Ok(stake_weight + balance)
@@ -113,10 +97,7 @@ impl Ledger {
         }
 
         let stake_weight = delegators.iter().fold(Decimal::new(0, LEDGER_BALANCE_SCALE), |acc, x| {
-          x.balance
-            .parse()
-            .unwrap_or_else(|_| Decimal::new(0, LEDGER_BALANCE_SCALE))
-            + acc
+          x.balance.parse().unwrap_or_else(|_| Decimal::new(0, LEDGER_BALANCE_SCALE)) + acc
         });
 
         Ok(stake_weight + balance)
@@ -127,6 +108,8 @@ impl Ledger {
 
 #[cfg(test)]
 mod tests {
+  use crate::MinaBlockStatus;
+
   use super::*;
 
   impl LedgerAccount {
@@ -135,13 +118,7 @@ mod tests {
     }
   }
 
-  fn get_accounts() -> (
-    LedgerAccount,
-    LedgerAccount,
-    LedgerAccount,
-    LedgerAccount,
-    LedgerAccount,
-  ) {
+  fn get_accounts() -> (LedgerAccount, LedgerAccount, LedgerAccount, LedgerAccount, LedgerAccount) {
     (
       LedgerAccount::new("A".to_string(), "1".to_string(), None),
       LedgerAccount::new("B".to_string(), "1".to_string(), None),
@@ -153,31 +130,9 @@ mod tests {
 
   fn get_votes() -> HashMap<String, MinaVote> {
     let mut map = HashMap::new();
-    map.insert(
-      "B".to_string(),
-      MinaVote::new(
-        "B".to_string(),
-        "",
-        "",
-        1,
-        crate::models::vote::MinaBlockStatus::Canonical,
-        1,
-        0,
-      ),
-    );
+    map.insert("B".to_string(), MinaVote::new("B".to_string(), "", "", 1, MinaBlockStatus::Canonical, 1, 0));
 
-    map.insert(
-      "C".to_string(),
-      MinaVote::new(
-        "C".to_string(),
-        "",
-        "",
-        1,
-        crate::models::vote::MinaBlockStatus::Canonical,
-        1,
-        0,
-      ),
-    );
+    map.insert("C".to_string(), MinaVote::new("C".to_string(), "", "", 1, MinaBlockStatus::Canonical, 1, 0));
 
     map
   }

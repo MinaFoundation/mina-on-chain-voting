@@ -1,9 +1,10 @@
-pub(crate) use crate::error::Error;
-pub(crate) type Result<T, E = Error> = std::result::Result<T, E>;
+pub use crate::error::Error;
+pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-pub(crate) use std::format as f;
+pub use std::format as f;
 
-/// Wrapper around a type `T` that can be used to implement external traits for `T`.
+/// Wrapper around a type `T` that can be used to implement external traits for
+/// `T`.
 ///
 /// # Examples
 ///
@@ -22,4 +23,4 @@ pub(crate) use std::format as f;
 /// let value = Wrapper::from(42);
 /// assert_eq!(value.0, 42);
 /// ```
-pub(crate) struct Wrapper<T>(pub T);
+pub struct Wrapper<T>(pub T);

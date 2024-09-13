@@ -1,24 +1,26 @@
-use crate::{
-  database::{cache::CacheManager, DBConnectionManager},
-  prelude::*,
-};
+use crate::{cache::CacheManager, prelude::*, MinaProposalManifest};
 use axum::http::{HeaderValue, Method};
 use clap::{Parser, ValueEnum};
+use diesel::{r2d2::ConnectionManager, PgConnection};
+use r2d2::Pool;
 use std::{collections::HashSet, fmt, sync::Arc};
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::EnvFilter;
 
+pub type ConnManager = Pool<ConnectionManager<PgConnection>>;
+
 #[derive(Clone)]
-pub(crate) struct Context {
-  pub(crate) cache: Arc<CacheManager>,
-  pub(crate) conn_manager: Arc<DBConnectionManager>,
-  pub(crate) network: NetworkConfig,
-  pub(crate) ledger_storage_path: String,
-  pub(crate) bucket_name: String,
+pub struct Context {
+  pub cache: Arc<CacheManager>,
+  pub conn_manager: Arc<ConnManager>,
+  pub network: NetworkConfig,
+  pub ledger_storage_path: String,
+  pub bucket_name: String,
+  pub manifest: MinaProposalManifest,
 }
 
 #[derive(Clone, Copy, Parser, ValueEnum, Debug)]
-pub(crate) enum NetworkConfig {
+pub enum NetworkConfig {
   Mainnet,
   Devnet,
   Berkeley,
@@ -35,57 +37,43 @@ impl fmt::Display for NetworkConfig {
 }
 
 #[derive(Clone, Parser)]
-pub(crate) struct Config {
+pub struct Config {
   /// The mina network to connect to.
   #[clap(long, env)]
-  pub(crate) mina_network: NetworkConfig,
-  /// The connection URL for the application database.
-  #[clap(long, env)]
-  pub(crate) database_url: String,
+  pub mina_network: NetworkConfig,
   /// The connection URL for the archive database.
   #[clap(long, env)]
-  pub(crate) archive_database_url: String,
+  pub archive_database_url: String,
   /// API Port.
   #[clap(long, env, default_value_t = 8080)]
-  pub(crate) port: u16,
+  pub port: u16,
   /// Origins allowed to make cross-site requests.
   #[clap(long, env = "SERVER_ALLOWED_ORIGINS", value_parser = parse_allowed_origins )]
-  pub(crate) allowed_origins: HashSet<String>,
+  pub allowed_origins: HashSet<String>,
   /// Set the name of the bucket containing the ledgers
   #[clap(long, env)]
-  pub(crate) bucket_name: String,
+  pub bucket_name: String,
   /// Path to store the ledgers
   #[clap(long, env, default_value = "/tmp/ledgers")]
-  pub(crate) ledger_storage_path: String,
+  pub ledger_storage_path: String,
 }
 
 #[allow(clippy::unnecessary_wraps)]
 fn parse_allowed_origins(arg: &str) -> Result<HashSet<String>> {
-  let allowed_origins = HashSet::from_iter(
-    arg
-      .split_whitespace()
-      .map(std::borrow::ToOwned::to_owned)
-      .collect::<HashSet<_>>(),
-  );
+  let allowed_origins =
+    HashSet::from_iter(arg.split_whitespace().map(std::borrow::ToOwned::to_owned).collect::<HashSet<_>>());
 
-  assert!(
-    !allowed_origins.is_empty(),
-    "failed to parse allowed_origins: {allowed_origins:?}"
-  );
+  assert!(!allowed_origins.is_empty(), "failed to parse allowed_origins: {allowed_origins:?}");
 
   Ok(allowed_origins)
 }
 
-pub(crate) fn init_cors(cfg: &Config) -> CorsLayer {
+pub fn init_cors(cfg: &Config) -> CorsLayer {
   let origins = cfg
     .allowed_origins
     .clone()
     .into_iter()
-    .map(|origin| {
-      origin
-        .parse()
-        .unwrap_or_else(|_| panic!("Error: failed parsing allowed-origin {origin}"))
-    })
+    .map(|origin| origin.parse().unwrap_or_else(|_| panic!("Error: failed parsing allowed-origin {origin}")))
     .collect::<Vec<HeaderValue>>();
 
   let layer = if cfg.allowed_origins.contains("*") {
@@ -94,12 +82,10 @@ pub(crate) fn init_cors(cfg: &Config) -> CorsLayer {
     CorsLayer::new().allow_origin(origins)
   };
 
-  layer
-    .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-    .allow_headers(Any)
+  layer.allow_methods([Method::GET, Method::POST, Method::OPTIONS]).allow_headers(Any)
 }
 
-pub(crate) fn init_tracing() {
+pub fn init_tracing() {
   tracing_subscriber::fmt::Subscriber::builder()
     .with_env_filter(EnvFilter::from_default_env())
     .with_writer(std::io::stderr)

@@ -1,8 +1,4 @@
-use crate::{
-  database::archive::FetchTransactionResult,
-  models::{diesel::MinaProposal, ledger::Ledger},
-  prelude::*,
-};
+use crate::{archive::FetchTransactionResult, ledger::Ledger, prelude::*, MinaProposal};
 use anyhow::Context;
 use diesel::SqlType;
 use diesel_derive_enum::DbEnum;
@@ -12,41 +8,41 @@ use std::collections::{hash_map::Entry, HashMap};
 
 #[derive(SqlType)]
 #[diesel(postgres_type(name = "chain_status_type"))]
-pub(crate) struct ChainStatusType;
+pub struct ChainStatusType;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, DbEnum)]
 #[ExistingTypePath = "ChainStatusType"]
-pub(crate) enum MinaBlockStatus {
+pub enum MinaBlockStatus {
   Pending,
   Canonical,
   Orphaned,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub(crate) struct MinaVoteWithWeight {
-  pub(crate) account: String,
-  pub(crate) hash: String,
-  pub(crate) memo: String,
-  pub(crate) height: i64,
-  pub(crate) status: MinaBlockStatus,
-  pub(crate) timestamp: i64,
-  pub(crate) nonce: i64,
-  pub(crate) weight: Decimal,
+pub struct MinaVoteWithWeight {
+  pub account: String,
+  pub hash: String,
+  pub memo: String,
+  pub height: i64,
+  pub status: MinaBlockStatus,
+  pub timestamp: i64,
+  pub nonce: i64,
+  pub weight: Decimal,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub(crate) struct MinaVote {
-  pub(crate) account: String,
-  pub(crate) hash: String,
-  pub(crate) memo: String,
-  pub(crate) height: i64,
-  pub(crate) status: MinaBlockStatus,
-  pub(crate) timestamp: i64,
-  pub(crate) nonce: i64,
+pub struct MinaVote {
+  pub account: String,
+  pub hash: String,
+  pub memo: String,
+  pub height: i64,
+  pub status: MinaBlockStatus,
+  pub timestamp: i64,
+  pub nonce: i64,
 }
 
 impl MinaVote {
-  pub(crate) fn new(
+  pub fn new(
     account: impl Into<String>,
     hash: impl Into<String>,
     memo: impl Into<String>,
@@ -55,18 +51,10 @@ impl MinaVote {
     timestamp: i64,
     nonce: i64,
   ) -> MinaVote {
-    MinaVote {
-      account: account.into(),
-      hash: hash.into(),
-      memo: memo.into(),
-      height,
-      status,
-      timestamp,
-      nonce,
-    }
+    MinaVote { account: account.into(), hash: hash.into(), memo: memo.into(), height, status, timestamp, nonce }
   }
 
-  pub(crate) fn to_weighted(&self, weight: Decimal) -> MinaVoteWithWeight {
+  pub fn to_weighted(&self, weight: Decimal) -> MinaVoteWithWeight {
     MinaVoteWithWeight {
       account: self.account.clone(),
       hash: self.hash.clone(),
@@ -79,20 +67,20 @@ impl MinaVote {
     }
   }
 
-  pub(crate) fn update_memo(&mut self, memo: impl Into<String>) {
+  pub fn update_memo(&mut self, memo: impl Into<String>) {
     let memo = memo.into();
     self.memo = memo;
   }
 
-  pub(crate) fn update_status(&mut self, status: MinaBlockStatus) {
+  pub fn update_status(&mut self, status: MinaBlockStatus) {
     self.status = status;
   }
 
-  pub(crate) fn is_newer_than(&self, other: &MinaVote) -> bool {
+  pub fn is_newer_than(&self, other: &MinaVote) -> bool {
     self.height > other.height || (self.height == other.height && self.nonce > other.nonce)
   }
 
-  pub(crate) fn match_decoded_memo(&mut self, key: &str) -> Option<String> {
+  pub fn match_decoded_memo(&mut self, key: &str) -> Option<String> {
     if let Ok(decoded) = self.decode_memo() {
       if decoded.to_lowercase() == key.to_lowercase() || decoded.to_lowercase() == f!("no {}", key.to_lowercase()) {
         return Some(decoded);
@@ -102,9 +90,8 @@ impl MinaVote {
   }
 
   fn decode_memo(&self) -> Result<String> {
-    let decoded = bs58::decode(&self.memo)
-      .into_vec()
-      .with_context(|| f!("failed to decode memo {} - bs58", &self.memo))?;
+    let decoded =
+      bs58::decode(&self.memo).into_vec().with_context(|| f!("failed to decode memo {} - bs58", &self.memo))?;
 
     let value = &decoded[3 .. decoded[2] as usize + 3];
 
@@ -114,20 +101,12 @@ impl MinaVote {
 
 impl From<FetchTransactionResult> for MinaVote {
   fn from(res: FetchTransactionResult) -> Self {
-    MinaVote::new(
-      res.account,
-      res.hash,
-      res.memo,
-      res.height,
-      res.status,
-      res.timestamp,
-      res.nonce,
-    )
+    MinaVote::new(res.account, res.hash, res.memo, res.height, res.status, res.timestamp, res.nonce)
   }
 }
 
 impl Wrapper<Vec<MinaVote>> {
-  pub(crate) fn process(self, key: impl Into<String>, tip: i64) -> Wrapper<HashMap<String, MinaVote>> {
+  pub fn process(self, key: impl Into<String>, tip: i64) -> Wrapper<HashMap<String, MinaVote>> {
     let mut map = HashMap::new();
     let key = key.into();
 
@@ -156,12 +135,7 @@ impl Wrapper<Vec<MinaVote>> {
     Wrapper(map)
   }
 
-  pub(crate) fn into_weighted(
-    self,
-    proposal: &MinaProposal,
-    ledger: &Ledger,
-    tip: i64,
-  ) -> Wrapper<Vec<MinaVoteWithWeight>> {
+  pub fn into_weighted(self, proposal: &MinaProposal, ledger: &Ledger, tip: i64) -> Wrapper<Vec<MinaVoteWithWeight>> {
     let votes = self.process(&proposal.key, tip);
 
     let votes_with_stake: Vec<MinaVoteWithWeight> = votes
@@ -178,19 +152,19 @@ impl Wrapper<Vec<MinaVote>> {
 }
 
 impl Wrapper<HashMap<String, MinaVote>> {
-  pub(crate) fn to_vec(&self) -> Wrapper<Vec<MinaVote>> {
+  pub fn to_vec(&self) -> Wrapper<Vec<MinaVote>> {
     Wrapper(self.0.values().cloned().collect())
   }
 }
 
 impl Wrapper<HashMap<String, MinaVote>> {
-  pub(crate) fn sort_by_timestamp(&mut self) -> &Self {
+  pub fn sort_by_timestamp(&mut self) -> &Self {
     self.to_vec().0.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
     self
   }
 }
 impl Wrapper<Vec<MinaVoteWithWeight>> {
-  pub(crate) fn sort_by_timestamp(mut self) -> Self {
+  pub fn sort_by_timestamp(mut self) -> Self {
     self.0.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
     self
   }
