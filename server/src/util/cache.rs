@@ -1,24 +1,25 @@
-use crate::{ledger::LedgerAccount, MinaVote, MinaVoteWithWeight};
+use crate::{ledger::LedgerAccount, Vote, VoteWithWeight};
 use moka::future::Cache as MokaCache;
 use std::sync::Arc;
 
-type ArcVotes = Arc<Vec<MinaVote>>;
-type ArcVotesWeighted = Arc<Vec<MinaVoteWithWeight>>;
+type ArcVotes = Arc<Vec<Vote>>;
+type ArcVotesWeighted = Arc<Vec<VoteWithWeight>>;
 type ArcLedger = Arc<Vec<LedgerAccount>>;
 
-pub type VotesCache = MokaCache<String, ArcVotes>;
-pub type VotesWeightedCache = MokaCache<String, ArcVotesWeighted>;
-pub type LedgerCache = MokaCache<String, ArcLedger>;
+type VotesCache = MokaCache<String, ArcVotes>;
+type VotesWeightedCache = MokaCache<String, ArcVotesWeighted>;
+type LedgerCache = MokaCache<String, ArcLedger>;
 
-pub struct CacheManager {
+#[derive(Clone)]
+pub struct Caches {
   pub votes: VotesCache,
   pub votes_weighted: VotesWeightedCache,
   pub ledger: LedgerCache,
 }
 
-impl CacheManager {
-  pub fn build() -> CacheManager {
-    CacheManager {
+impl Caches {
+  pub fn build() -> Self {
+    Self {
       votes: VotesCache::builder().time_to_live(std::time::Duration::from_secs(60 * 5)).build(),
       votes_weighted: VotesWeightedCache::builder().time_to_live(std::time::Duration::from_secs(60 * 5)).build(),
       ledger: LedgerCache::builder().time_to_live(std::time::Duration::from_secs(60 * 60 * 12)).build(),

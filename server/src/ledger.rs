@@ -1,27 +1,17 @@
-use crate::{MinaVote, NetworkConfig, ProposalVersion, Wrapper};
+use crate::{Network, ProposalVersion, Vote, Wrapper};
 use anyhow::{anyhow, Result};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, io::Read, path::Path};
 
-const LEDGER_BALANCE_SCALE: u32 = 9;
-
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Ledger(pub Vec<LedgerAccount>);
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
-#[serde(rename_all = "camelCase")]
-pub struct LedgerAccount {
-  pub pk: String,
-  pub balance: String,
-  pub delegate: Option<String>,
-}
 
 impl Ledger {
   pub async fn fetch(
     hash: impl Into<String>,
     ledger_storage_path: String,
-    network: NetworkConfig,
+    network: Network,
     bucket_name: String,
     epoch: i64,
   ) -> Result<Ledger> {
@@ -51,7 +41,7 @@ impl Ledger {
 
   pub fn get_stake_weight(
     &self,
-    map: &Wrapper<HashMap<String, MinaVote>>,
+    map: &Wrapper<HashMap<String, Vote>>,
     version: &ProposalVersion,
     public_key: impl Into<String>,
   ) -> Result<Decimal> {
@@ -107,36 +97,26 @@ impl Ledger {
   }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "camelCase")]
+pub struct LedgerAccount {
+  pub pk: String,
+  pub balance: String,
+  pub delegate: Option<String>,
+}
+
+impl LedgerAccount {
+  pub fn new(pk: String, balance: String, delegate: Option<String>) -> LedgerAccount {
+    LedgerAccount { pk, balance, delegate }
+  }
+}
+
+pub const LEDGER_BALANCE_SCALE: u32 = 9;
+
 #[cfg(test)]
 mod tests {
-  use crate::MinaBlockStatus;
-
   use super::*;
-
-  impl LedgerAccount {
-    pub fn new(pk: String, balance: String, delegate: Option<String>) -> LedgerAccount {
-      LedgerAccount { pk, balance, delegate }
-    }
-  }
-
-  fn get_accounts() -> (LedgerAccount, LedgerAccount, LedgerAccount, LedgerAccount, LedgerAccount) {
-    (
-      LedgerAccount::new("A".to_string(), "1".to_string(), None),
-      LedgerAccount::new("B".to_string(), "1".to_string(), None),
-      LedgerAccount::new("C".to_string(), "1".to_string(), Some("A".to_string())),
-      LedgerAccount::new("D".to_string(), "1".to_string(), Some("A".to_string())),
-      LedgerAccount::new("E".to_string(), "1".to_string(), Some("B".to_string())),
-    )
-  }
-
-  fn get_votes() -> HashMap<String, MinaVote> {
-    let mut map = HashMap::new();
-    map.insert("B".to_string(), MinaVote::new("B".to_string(), "", "", 1, MinaBlockStatus::Canonical, 1, 0));
-
-    map.insert("C".to_string(), MinaVote::new("C".to_string(), "", "", 1, MinaBlockStatus::Canonical, 1, 0));
-
-    map
-  }
+  use crate::BlockStatus;
 
   #[test]
   fn test_stake_weight_v1() {
@@ -150,7 +130,7 @@ mod tests {
       &ProposalVersion::V1,
       "E",
     );
-    assert_eq!(error.is_err(), true);
+    assert!(error.is_err());
 
     // Delegated stake away - returns 0.000000000.
     let d_weight = Ledger::get_stake_weight(
@@ -193,7 +173,7 @@ mod tests {
       &ProposalVersion::V2,
       "F",
     );
-    assert_eq!(error.is_err(), true);
+    assert!(error.is_err());
 
     let a_weight = Ledger::get_stake_weight(
       &Ledger(vec![a.clone(), b.clone(), c.clone(), d.clone(), e.clone()]),
@@ -211,5 +191,22 @@ mod tests {
     );
 
     assert_eq!(b_weight.unwrap(), Decimal::new(2000000000, LEDGER_BALANCE_SCALE));
+  }
+
+  fn get_accounts() -> (LedgerAccount, LedgerAccount, LedgerAccount, LedgerAccount, LedgerAccount) {
+    (
+      LedgerAccount::new("A".to_string(), "1".to_string(), None),
+      LedgerAccount::new("B".to_string(), "1".to_string(), None),
+      LedgerAccount::new("C".to_string(), "1".to_string(), Some("A".to_string())),
+      LedgerAccount::new("D".to_string(), "1".to_string(), Some("A".to_string())),
+      LedgerAccount::new("E".to_string(), "1".to_string(), Some("B".to_string())),
+    )
+  }
+
+  fn get_votes() -> HashMap<String, Vote> {
+    let mut map = HashMap::new();
+    map.insert("B".to_string(), Vote::new("B".to_string(), "", "", 1, BlockStatus::Canonical, 1, 0));
+    map.insert("C".to_string(), Vote::new("C".to_string(), "", "", 1, BlockStatus::Canonical, 1, 0));
+    map
   }
 }

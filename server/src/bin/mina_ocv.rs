@@ -1,12 +1,13 @@
 use anyhow::Result;
 use axum::{
+  debug_handler,
   extract::{Path, State},
   response::{IntoResponse, Response},
   routing::get,
   serve as axum_serve, Json, Router,
 };
 use clap::Parser;
-use mina_ocv::{Ocv, OcvConfig, Wrapper};
+use mina_ocv::{shutdown_signal, Ocv, OcvConfig, Wrapper};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
@@ -40,26 +41,30 @@ async fn main() -> Result<()> {
     .route("/api/proposal/:id/results", get(get_proposal_result))
     .layer(CorsLayer::permissive())
     .with_state(Arc::new(ocv));
-  axum_serve(listener, router).await?;
+  axum_serve(listener, router).with_graceful_shutdown(shutdown_signal()).await?;
   Ok(())
 }
 
+#[debug_handler]
 async fn get_info(ctx: State<Arc<Ocv>>) -> Response {
   tracing::info!("get_info");
-  Wrapper(ctx.info().await).wrapper_into_response()
+  Wrapper(ctx.info().await).into_response()
 }
 
+#[debug_handler]
 async fn get_proposals(ctx: State<Arc<Ocv>>) -> Response {
   tracing::info!("get_proposals");
-  Json(ctx.manifest.proposals.clone()).into_response()
+  Json(ctx.proposals_manifest.proposals.clone()).into_response()
 }
 
+#[debug_handler]
 async fn get_proposal(ctx: State<Arc<Ocv>>, Path(id): Path<usize>) -> Response {
   tracing::info!("get_proposal {}", id);
-  Wrapper(ctx.proposal(id).await).wrapper_into_response()
+  Wrapper(ctx.proposal(id).await).into_response()
 }
 
+#[debug_handler]
 async fn get_proposal_result(ctx: State<Arc<Ocv>>, Path(id): Path<usize>) -> Response {
   tracing::info!("get_proposal_result {}", id);
-  Wrapper(ctx.proposal_result(id).await).wrapper_into_response()
+  Wrapper(ctx.proposal_result(id).await).into_response()
 }
