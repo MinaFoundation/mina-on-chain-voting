@@ -1,12 +1,11 @@
-use std::sync::Arc;
-
-use crate::{prelude::*, ChainStatusType, ConnManager, MinaBlockStatus};
-use anyhow::Context;
+use crate::{ChainStatusType, ConnManager, MinaBlockStatus};
+use anyhow::{Context, Result};
 use diesel::{
   sql_query,
   sql_types::{BigInt, Text},
   QueryableByName, RunQueryDsl,
 };
+use std::sync::Arc;
 
 #[derive(QueryableByName)]
 pub struct FetchChainTipResult {

@@ -1,7 +1,6 @@
 use bytes::Bytes;
-use std::io::Read;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -34,7 +33,7 @@ pub struct MinaProposal {
   pub url: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MinaProposalManifest {
   pub proposals: Vec<MinaProposal>,
 }
@@ -44,15 +43,15 @@ static PROPOSALS_MANIFEST_GITHUB_URL: &str =
 
 impl MinaProposalManifest {
   // TODO: error messages
-  pub async fn load(maybe_proposals_url: Option<String>) -> Result<Self> {
+  pub async fn load(maybe_proposals_url: &Option<String>) -> Result<Self> {
     let manifest_bytes = match maybe_proposals_url {
       Some(url) => {
-        let url = if url.is_empty() { PROPOSALS_MANIFEST_GITHUB_URL.to_string() } else { url };
-        reqwest::Client::new().get(&url).send().await.unwrap().bytes().await.unwrap()
+        let url = if url.is_empty() { &PROPOSALS_MANIFEST_GITHUB_URL.to_string() } else { url };
+        reqwest::Client::new().get(url).send().await?.bytes().await?
       }
       None => Bytes::from_static(include_bytes!("../proposals/proposals.json")),
     };
-    Ok(serde_json::from_slice(manifest_bytes.as_ref()).unwrap())
+    Ok(serde_json::from_slice(manifest_bytes.as_ref())?)
   }
 
   pub fn proposal(&self, id: usize) -> Result<MinaProposal> {

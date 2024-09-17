@@ -3,8 +3,6 @@ use axum::{
   response::{IntoResponse, Response},
 };
 
-use crate::MINA_GOVERNANCE_SERVER;
-
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
   #[error(transparent)]
@@ -30,15 +28,9 @@ impl Error {
 impl IntoResponse for Error {
   fn into_response(self) -> Response {
     match self {
-      Self::Diesel(ref error) => {
-        tracing::error!(target: MINA_GOVERNANCE_SERVER, "Error: {error}");
-      }
-
-      Self::Anyhow(ref error) => {
-        tracing::error!(target: MINA_GOVERNANCE_SERVER, "Error: {error}");
-      }
-    }
-
+      Self::Diesel(ref error) => tracing::error!("Error: {error}"),
+      Self::Anyhow(ref error) => tracing::error!("Error: {error}"),
+    };
     (self.status_code(), self.to_string()).into_response()
   }
 }

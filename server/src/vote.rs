@@ -1,5 +1,5 @@
-use crate::{archive::FetchTransactionResult, ledger::Ledger, prelude::*, MinaProposal};
-use anyhow::Context;
+use crate::{archive::FetchTransactionResult, ledger::Ledger, MinaProposal, Wrapper};
+use anyhow::{Context, Result};
 use diesel::SqlType;
 use diesel_derive_enum::DbEnum;
 use rust_decimal::Decimal;
@@ -82,7 +82,8 @@ impl MinaVote {
 
   pub fn match_decoded_memo(&mut self, key: &str) -> Option<String> {
     if let Ok(decoded) = self.decode_memo() {
-      if decoded.to_lowercase() == key.to_lowercase() || decoded.to_lowercase() == f!("no {}", key.to_lowercase()) {
+      if decoded.to_lowercase() == key.to_lowercase() || decoded.to_lowercase() == format!("no {}", key.to_lowercase())
+      {
         return Some(decoded);
       }
     }
@@ -91,11 +92,11 @@ impl MinaVote {
 
   fn decode_memo(&self) -> Result<String> {
     let decoded =
-      bs58::decode(&self.memo).into_vec().with_context(|| f!("failed to decode memo {} - bs58", &self.memo))?;
+      bs58::decode(&self.memo).into_vec().with_context(|| format!("failed to decode memo {} - bs58", &self.memo))?;
 
     let value = &decoded[3 .. decoded[2] as usize + 3];
 
-    Ok(String::from_utf8(value.to_vec()).with_context(|| f!("failed to decode memo {} - from_utf8", &self.memo))?)
+    Ok(String::from_utf8(value.to_vec()).with_context(|| format!("failed to decode memo {} - from_utf8", &self.memo))?)
   }
 }
 

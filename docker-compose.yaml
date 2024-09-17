@@ -18,8 +18,8 @@ services:
     image: ocv-server
     build:
       context: ./server
-      # dockerfile: Dockerfile
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      # dockerfile: Dockerfile.dev
     env_file: .env
     ports:
       - 8080:8080

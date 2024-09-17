@@ -1,5 +1,5 @@
-use crate::{config::NetworkConfig, prelude::*, MinaVote, ProposalVersion};
-use anyhow::anyhow;
+use crate::{MinaVote, NetworkConfig, ProposalVersion, Wrapper};
+use anyhow::{anyhow, Result};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, io::Read, path::Path};
@@ -26,12 +26,13 @@ impl Ledger {
     epoch: i64,
   ) -> Result<Ledger> {
     let hash: String = hash.into();
-    let ledger_file_path = f!("{ledger_storage_path}/{network}-{epoch}-{hash}.json");
+    let ledger_file_path = format!("{ledger_storage_path}/{network}-{epoch}-{hash}.json");
     if !Path::new(&ledger_file_path).exists() {
       if !Path::new(&ledger_storage_path).exists() {
         let _ = std::fs::create_dir_all(ledger_storage_path.clone());
       }
-      let url = f!("https://{bucket_name}.s3.us-west-2.amazonaws.com/{network}/{network}-{epoch}-{hash}.json.tar.gz");
+      let url =
+        format!("https://{bucket_name}.s3.us-west-2.amazonaws.com/{network}/{network}-{epoch}-{hash}.json.tar.gz");
       tracing::info!("Ledger path not found, downloading {} to {}", url, ledger_file_path);
       let response = reqwest::get(url).await.unwrap();
       if response.status().is_success() {

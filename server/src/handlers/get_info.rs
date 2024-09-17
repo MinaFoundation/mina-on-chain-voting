@@ -1,21 +1,20 @@
 use crate::{
   archive::{fetch_chain_tip, fetch_latest_slot},
-  prelude::*,
-  Context,
+  Ocv,
 };
-use axum::{http::StatusCode, response::IntoResponse, Extension, Json};
-use serde::{Deserialize, Serialize};
+use anyhow::Result;
+use serde::Serialize;
 
-#[derive(Serialize, Deserialize)]
-struct GetCoreApiInfoResponse {
+#[derive(Serialize)]
+pub struct GetCoreApiInfoResponse {
   chain_tip: i64,
   current_slot: i64,
 }
 
-#[allow(clippy::unused_async)]
-pub async fn get_core_api_info(ctx: Extension<Context>) -> Result<impl IntoResponse> {
-  let chain_tip = fetch_chain_tip(&ctx.conn_manager)?;
-  let current_slot = fetch_latest_slot(&ctx.conn_manager)?;
-  let response = GetCoreApiInfoResponse { chain_tip, current_slot };
-  Ok((StatusCode::OK, Json(response)).into_response())
+impl Ocv {
+  pub async fn info(&self) -> Result<GetCoreApiInfoResponse> {
+    let chain_tip = fetch_chain_tip(&self.conn_manager)?;
+    let current_slot = fetch_latest_slot(&self.conn_manager)?;
+    Ok(GetCoreApiInfoResponse { chain_tip, current_slot })
+  }
 }
