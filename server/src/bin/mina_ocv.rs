@@ -9,8 +9,7 @@ use clap::Parser;
 use mina_ocv::{Ocv, OcvConfig, Wrapper};
 use std::sync::Arc;
 use tokio::net::TcpListener;
-
-// use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::CorsLayer;
 
 #[derive(Clone, Parser)]
 struct ServeArgs {
@@ -35,27 +34,32 @@ async fn main() -> Result<()> {
 
   let ocv = config.to_ocv().await?;
   let router = Router::new()
-    .route("/api/info", get(get_core_api_info))
-    .route("/api/proposals", get(get_mina_proposals))
-    .route("/api/proposal/:id", get(get_mina_proposal))
-    .route("/api/proposal/:id/results", get(get_mina_proposal_result))
+    .route("/api/info", get(get_info))
+    .route("/api/proposals", get(get_proposals))
+    .route("/api/proposal/:id", get(get_proposal))
+    .route("/api/proposal/:id/results", get(get_proposal_result))
+    .layer(CorsLayer::permissive())
     .with_state(Arc::new(ocv));
   axum_serve(listener, router).await?;
   Ok(())
 }
 
-async fn get_core_api_info(ctx: State<Arc<Ocv>>) -> Response {
+async fn get_info(ctx: State<Arc<Ocv>>) -> Response {
+  tracing::info!("get_info");
   Wrapper(ctx.info().await).wrapper_into_response()
 }
 
-async fn get_mina_proposals(ctx: State<Arc<Ocv>>) -> Response {
+async fn get_proposals(ctx: State<Arc<Ocv>>) -> Response {
+  tracing::info!("get_proposals");
   Json(ctx.manifest.proposals.clone()).into_response()
 }
 
-async fn get_mina_proposal_result(ctx: State<Arc<Ocv>>, Path(id): Path<usize>) -> Response {
-  Wrapper(ctx.get_mina_proposal_result(id).await).wrapper_into_response()
+async fn get_proposal(ctx: State<Arc<Ocv>>, Path(id): Path<usize>) -> Response {
+  tracing::info!("get_proposal {}", id);
+  Wrapper(ctx.proposal(id).await).wrapper_into_response()
 }
 
-async fn get_mina_proposal(ctx: State<Arc<Ocv>>, Path(id): Path<usize>) -> Response {
-  Wrapper(ctx.get_mina_proposal(id).await).wrapper_into_response()
+async fn get_proposal_result(ctx: State<Arc<Ocv>>, Path(id): Path<usize>) -> Response {
+  tracing::info!("get_proposal_result {}", id);
+  Wrapper(ctx.proposal_result(id).await).wrapper_into_response()
 }

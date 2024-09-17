@@ -42,7 +42,6 @@ static PROPOSALS_MANIFEST_GITHUB_URL: &str =
   "https://raw.githubusercontent.com/MinaFoundation/mina-on-chain-voting/main/server/proposals/proposals.json";
 
 impl MinaProposalManifest {
-  // TODO: error messages
   pub async fn load(maybe_proposals_url: &Option<String>) -> Result<Self> {
     let manifest_bytes = match maybe_proposals_url {
       Some(url) => {

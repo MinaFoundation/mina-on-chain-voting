@@ -18,7 +18,7 @@ pub struct GetMinaProposalResultResponse {
 }
 
 impl Ocv {
-  pub async fn get_mina_proposal_result(&self, id: usize) -> Result<GetMinaProposalResultResponse> {
+  pub async fn proposal_result(&self, id: usize) -> Result<GetMinaProposalResultResponse> {
     let proposal = self.manifest.proposal(id)?;
     if proposal.ledger_hash.is_none() {
       return Ok(GetMinaProposalResultResponse {

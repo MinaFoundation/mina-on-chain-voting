@@ -14,7 +14,7 @@ pub struct GetMinaProposalResponse {
 }
 
 impl Ocv {
-  pub async fn get_mina_proposal(&self, id: usize) -> Result<GetMinaProposalResponse> {
+  pub async fn proposal(&self, id: usize) -> Result<GetMinaProposalResponse> {
     let proposal = self.manifest.proposal(id)?;
 
     if let Some(cached) = self.cache.votes.get(&proposal.key).await {
