@@ -1,7 +1,7 @@
-mod cache;
+mod caches;
 mod shutdown_signal;
 mod wrapper;
 
-pub use cache::Caches;
+pub use caches::Caches;
 pub use shutdown_signal::shutdown_signal;
 pub use wrapper::Wrapper;
