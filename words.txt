@@ -1,6 +1,10 @@
 codebases
+delegators
 devnet
+lightnet
 mina
 moka
+reqwest
 runbook
 rustsec
+thiserror

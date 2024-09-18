@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MinaProposals",
+  "type": "object",
+  "properties": {
+    "proposals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "The ID of the proposal"
+          },
+          "key": {
+            "type": "string",
+            "description": "Key string of the proposal"
+          },
+          "start_time": {
+            "type": "integer",
+            "description": "Start time of the proposal (Unix timestamp)"
+          },
+          "end_time": {
+            "type": "integer",
+            "description": "End time of the proposal (Unix timestamp)"
+          },
+          "epoch": {
+            "type": "integer",
+            "description": "Epoch in which the proposal is valid"
+          },
+          "ledger_hash": {
+            "type": ["string", "null"],
+            "description": "Optional ledger hash"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["Core", "Networking", "Interface", "ERC", "Cryptography"],
+            "description": "Category of the proposal"
+          },
+          "version": {
+            "type": "string",
+            "enum": ["V1", "V2"],
+            "description": "Version of the proposal"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the proposal"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the proposal"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL for more information on the proposal"
+          },
+          "network": {
+            "type": "string",
+            "enum": ["devnet", "mainnet"],
+            "description": "Network on which the proposal is valid"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "start_time",
+          "end_time",
+          "epoch",
+          "category",
+          "version",
+          "title",
+          "description",
+          "url",
+          "network"
+        ]
+      }
+    }
+  },
+  "required": ["proposals"]
+}

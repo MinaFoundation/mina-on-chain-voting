@@ -1,9 +1,5 @@
-use crate::{
-  database::archive::FetchTransactionResult,
-  models::{diesel::MinaProposal, ledger::Ledger},
-  prelude::*,
-};
-use anyhow::Context;
+use crate::{archive::FetchTransactionResult, ledger::Ledger, Proposal, Wrapper};
+use anyhow::{Context, Result};
 use diesel::SqlType;
 use diesel_derive_enum::DbEnum;
 use rust_decimal::Decimal;
@@ -12,62 +8,54 @@ use std::collections::{hash_map::Entry, HashMap};
 
 #[derive(SqlType)]
 #[diesel(postgres_type(name = "chain_status_type"))]
-pub(crate) struct ChainStatusType;
+pub struct ChainStatusType;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, DbEnum)]
 #[ExistingTypePath = "ChainStatusType"]
-pub(crate) enum MinaBlockStatus {
+pub enum BlockStatus {
   Pending,
   Canonical,
   Orphaned,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub(crate) struct MinaVoteWithWeight {
-  pub(crate) account: String,
-  pub(crate) hash: String,
-  pub(crate) memo: String,
-  pub(crate) height: i64,
-  pub(crate) status: MinaBlockStatus,
-  pub(crate) timestamp: i64,
-  pub(crate) nonce: i64,
-  pub(crate) weight: Decimal,
+pub struct VoteWithWeight {
+  pub account: String,
+  pub hash: String,
+  pub memo: String,
+  pub height: i64,
+  pub status: BlockStatus,
+  pub timestamp: i64,
+  pub nonce: i64,
+  pub weight: Decimal,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub(crate) struct MinaVote {
-  pub(crate) account: String,
-  pub(crate) hash: String,
-  pub(crate) memo: String,
-  pub(crate) height: i64,
-  pub(crate) status: MinaBlockStatus,
-  pub(crate) timestamp: i64,
-  pub(crate) nonce: i64,
+pub struct Vote {
+  pub account: String,
+  pub hash: String,
+  pub memo: String,
+  pub height: i64,
+  pub status: BlockStatus,
+  pub timestamp: i64,
+  pub nonce: i64,
 }
 
-impl MinaVote {
-  pub(crate) fn new(
+impl Vote {
+  pub fn new(
     account: impl Into<String>,
     hash: impl Into<String>,
     memo: impl Into<String>,
     height: i64,
-    status: MinaBlockStatus,
+    status: BlockStatus,
     timestamp: i64,
     nonce: i64,
-  ) -> MinaVote {
-    MinaVote {
-      account: account.into(),
-      hash: hash.into(),
-      memo: memo.into(),
-      height,
-      status,
-      timestamp,
-      nonce,
-    }
+  ) -> Self {
+    Self { account: account.into(), hash: hash.into(), memo: memo.into(), height, status, timestamp, nonce }
   }
 
-  pub(crate) fn to_weighted(&self, weight: Decimal) -> MinaVoteWithWeight {
-    MinaVoteWithWeight {
+  pub fn to_weighted(&self, weight: Decimal) -> VoteWithWeight {
+    VoteWithWeight {
       account: self.account.clone(),
       hash: self.hash.clone(),
       memo: self.memo.clone(),
@@ -79,55 +67,49 @@ impl MinaVote {
     }
   }
 
-  pub(crate) fn update_memo(&mut self, memo: impl Into<String>) {
+  pub fn update_memo(&mut self, memo: impl Into<String>) {
     let memo = memo.into();
     self.memo = memo;
   }
 
-  pub(crate) fn update_status(&mut self, status: MinaBlockStatus) {
+  pub fn update_status(&mut self, status: BlockStatus) {
     self.status = status;
   }
 
-  pub(crate) fn is_newer_than(&self, other: &MinaVote) -> bool {
+  pub fn is_newer_than(&self, other: &Vote) -> bool {
     self.height > other.height || (self.height == other.height && self.nonce > other.nonce)
   }
 
-  pub(crate) fn match_decoded_memo(&mut self, key: &str) -> Option<String> {
+  pub fn match_decoded_memo(&mut self, key: &str) -> Option<String> {
     if let Ok(decoded) = self.decode_memo() {
-      if decoded.to_lowercase() == key.to_lowercase() || decoded.to_lowercase() == f!("no {}", key.to_lowercase()) {
+      if decoded.to_lowercase() == key.to_lowercase() || decoded.to_lowercase() == format!("no {}", key.to_lowercase())
+      {
         return Some(decoded);
       }
     }
     None
   }
 
-  fn decode_memo(&self) -> Result<String> {
-    let decoded = bs58::decode(&self.memo)
-      .into_vec()
-      .with_context(|| f!("failed to decode memo {} - bs58", &self.memo))?;
+  pub(crate) fn decode_memo(&self) -> Result<String> {
+    let decoded =
+      bs58::decode(&self.memo).into_vec().with_context(|| format!("failed to decode memo {} - bs58", &self.memo))?;
 
     let value = &decoded[3 .. decoded[2] as usize + 3];
 
-    Ok(String::from_utf8(value.to_vec()).with_context(|| f!("failed to decode memo {} - from_utf8", &self.memo))?)
+    let result =
+      String::from_utf8(value.to_vec()).with_context(|| format!("failed to decode memo {} - from_utf8", &self.memo))?;
+    Ok(result)
   }
 }
 
-impl From<FetchTransactionResult> for MinaVote {
+impl From<FetchTransactionResult> for Vote {
   fn from(res: FetchTransactionResult) -> Self {
-    MinaVote::new(
-      res.account,
-      res.hash,
-      res.memo,
-      res.height,
-      res.status,
-      res.timestamp,
-      res.nonce,
-    )
+    Vote::new(res.account, res.hash, res.memo, res.height, res.status, res.timestamp, res.nonce)
   }
 }
 
-impl Wrapper<Vec<MinaVote>> {
-  pub(crate) fn process(self, key: impl Into<String>, tip: i64) -> Wrapper<HashMap<String, MinaVote>> {
+impl Wrapper<Vec<Vote>> {
+  pub fn process(self, key: impl Into<String>, tip: i64) -> Wrapper<HashMap<String, Vote>> {
     let mut map = HashMap::new();
     let key = key.into();
 
@@ -136,7 +118,7 @@ impl Wrapper<Vec<MinaVote>> {
         vote.update_memo(memo);
 
         if tip - vote.height >= 10 {
-          vote.update_status(MinaBlockStatus::Canonical);
+          vote.update_status(BlockStatus::Canonical);
         }
 
         match map.entry(vote.account.clone()) {
@@ -156,15 +138,10 @@ impl Wrapper<Vec<MinaVote>> {
     Wrapper(map)
   }
 
-  pub(crate) fn into_weighted(
-    self,
-    proposal: &MinaProposal,
-    ledger: &Ledger,
-    tip: i64,
-  ) -> Wrapper<Vec<MinaVoteWithWeight>> {
+  pub fn into_weighted(self, proposal: &Proposal, ledger: &Ledger, tip: i64) -> Wrapper<Vec<VoteWithWeight>> {
     let votes = self.process(&proposal.key, tip);
 
-    let votes_with_stake: Vec<MinaVoteWithWeight> = votes
+    let votes_with_stake: Vec<VoteWithWeight> = votes
       .0
       .iter()
       .filter_map(|(account, vote)| {
@@ -177,20 +154,20 @@ impl Wrapper<Vec<MinaVote>> {
   }
 }
 
-impl Wrapper<HashMap<String, MinaVote>> {
-  pub(crate) fn to_vec(&self) -> Wrapper<Vec<MinaVote>> {
+impl Wrapper<HashMap<String, Vote>> {
+  pub fn to_vec(&self) -> Wrapper<Vec<Vote>> {
     Wrapper(self.0.values().cloned().collect())
   }
 }
 
-impl Wrapper<HashMap<String, MinaVote>> {
-  pub(crate) fn sort_by_timestamp(&mut self) -> &Self {
+impl Wrapper<HashMap<String, Vote>> {
+  pub fn sort_by_timestamp(&mut self) -> &Self {
     self.to_vec().0.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
     self
   }
 }
-impl Wrapper<Vec<MinaVoteWithWeight>> {
-  pub(crate) fn sort_by_timestamp(mut self) -> Self {
+impl Wrapper<Vec<VoteWithWeight>> {
+  pub fn sort_by_timestamp(mut self) -> Self {
     self.0.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
     self
   }
@@ -200,59 +177,9 @@ impl Wrapper<Vec<MinaVoteWithWeight>> {
 mod tests {
   use super::*;
 
-  fn get_test_votes() -> Vec<MinaVote> {
-    vec![
-      MinaVote::new(
-        "1",
-        "1",
-        "E4YjFkHVUXbEAkQcUrAEcS1fqvbncnn9Tuz2Jtb1Uu79zY9UAJRpd",
-        100,
-        MinaBlockStatus::Pending,
-        100,
-        1,
-      ),
-      MinaVote::new(
-        "1",
-        "2",
-        "E4YjFkHVUXbEAkQcUrAEcS1fqvbncnn9Tuz2Jtb1Uu79zY9UAJRpd",
-        110,
-        MinaBlockStatus::Pending,
-        110,
-        1,
-      ),
-      MinaVote::new(
-        "2",
-        "3",
-        "E4YjFkHVUXbEAkQcUrAEcS1fqvbncnn9Tuz2Jtb1Uu79zY9UAJRpd",
-        110,
-        MinaBlockStatus::Pending,
-        110,
-        1,
-      ),
-      MinaVote::new(
-        "2",
-        "4",
-        "E4YdLeukpqzqyBAxujeELx9SZWoUW9MhcUfnGHF9PhQmxTJcpmj7j",
-        120,
-        MinaBlockStatus::Pending,
-        120,
-        2,
-      ),
-      MinaVote::new(
-        "2",
-        "4",
-        "E4YiC7vB4DC9JoQvaj83nBWwHC3gJh4G9EBef7xh4ti4idBAgZai7",
-        120,
-        MinaBlockStatus::Pending,
-        120,
-        2,
-      ),
-    ]
-  }
-
   #[test]
   fn test_decode_memo() {
-    let mut vote = MinaVote::new("1", "1", "", 100, MinaBlockStatus::Pending, 100, 1);
+    let mut vote = Vote::new("1", "1", "", 100, BlockStatus::Pending, 100, 1);
 
     vote.update_memo("E4Yf92G48v8FApR4EWQq3iKb2vZkHHxZHPaZ73NQNBXmHeXNzHHSp");
     assert_eq!(vote.decode_memo().unwrap(), "Payment#0");
@@ -300,14 +227,24 @@ mod tests {
     assert_eq!(a1.hash, "2");
     assert_eq!(a1.memo, "no cftest-2");
     assert_eq!(a1.height, 110);
-    assert_eq!(a1.status, MinaBlockStatus::Canonical);
+    assert_eq!(a1.status, BlockStatus::Canonical);
     assert_eq!(a1.nonce, 1);
 
     assert_eq!(a2.account, "2");
     assert_eq!(a2.hash, "4");
     assert_eq!(a2.memo, "cftest-2");
     assert_eq!(a2.height, 120);
-    assert_eq!(a2.status, MinaBlockStatus::Pending);
+    assert_eq!(a2.status, BlockStatus::Pending);
     assert_eq!(a2.nonce, 2);
+  }
+
+  fn get_test_votes() -> Vec<Vote> {
+    vec![
+      Vote::new("1", "1", "E4YjFkHVUXbEAkQcUrAEcS1fqvbncnn9Tuz2Jtb1Uu79zY9UAJRpd", 100, BlockStatus::Pending, 100, 1),
+      Vote::new("1", "2", "E4YjFkHVUXbEAkQcUrAEcS1fqvbncnn9Tuz2Jtb1Uu79zY9UAJRpd", 110, BlockStatus::Pending, 110, 1),
+      Vote::new("2", "3", "E4YjFkHVUXbEAkQcUrAEcS1fqvbncnn9Tuz2Jtb1Uu79zY9UAJRpd", 110, BlockStatus::Pending, 110, 1),
+      Vote::new("2", "4", "E4YdLeukpqzqyBAxujeELx9SZWoUW9MhcUfnGHF9PhQmxTJcpmj7j", 120, BlockStatus::Pending, 120, 2),
+      Vote::new("2", "4", "E4YiC7vB4DC9JoQvaj83nBWwHC3gJh4G9EBef7xh4ti4idBAgZai7", 120, BlockStatus::Pending, 120, 2),
+    ]
   }
 }
