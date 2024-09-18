@@ -1,20 +1,17 @@
 services:
   web:
     container_name: web
-    profiles: ["all", "web"]
     build:
       context: ./web
       dockerfile: Dockerfile
     env_file: .env
     environment:
-      - API_BASE_URL=http://server:8080
       - NEXT_PUBLIC_API_BASE_URL=http://server:8080
       - RELEASE_STAGE=production
     ports:
       - 3000:3000
   server:
     container_name: server
-    profiles: ["all", "server"]
     image: ocv-server
     build:
       context: ./server

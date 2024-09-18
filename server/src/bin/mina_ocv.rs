@@ -15,7 +15,7 @@ use tower_http::cors::CorsLayer;
 #[derive(Clone, Parser)]
 struct ServeArgs {
   /// API Host.
-  #[clap(long, env, default_value = "127.0.0.1")]
+  #[clap(long, env, default_value = "0.0.0.0")]
   pub host: String,
   /// API Port.
   #[clap(long, env, default_value = "8080")]
