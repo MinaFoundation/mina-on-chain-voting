@@ -28,10 +28,6 @@
             "type": "integer",
             "description": "Epoch in which the proposal is valid"
           },
-          "ledger_hash": {
-            "type": ["string", "null"],
-            "description": "Optional ledger hash"
-          },
           "category": {
             "type": "string",
             "enum": ["Core", "Networking", "Interface", "ERC", "Cryptography"],

@@ -1,41 +1,63 @@
-use crate::{Network, ProposalVersion, Vote, Wrapper};
-use anyhow::{anyhow, Result};
+use crate::{util::s3_client, Network, ProposalVersion, Vote, Wrapper};
+use anyhow::{anyhow, bail, Result};
+use aws_sdk_s3::{operation::list_objects_v2::ListObjectsV2Output, types::Object};
+use flate2::read::GzDecoder;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, io::Read, path::Path};
+use std::{collections::HashMap, fs::read_dir, io::Read, path::PathBuf};
+use tar::Archive;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Ledger(pub Vec<LedgerAccount>);
 
 impl Ledger {
-  pub async fn fetch(
-    hash: impl Into<String>,
-    ledger_storage_path: String,
-    network: Network,
-    bucket_name: String,
-    epoch: i64,
-  ) -> Result<Ledger> {
-    let hash: String = hash.into();
-    let ledger_file_path = format!("{ledger_storage_path}/{network}-{epoch}-{hash}.json");
-    if !Path::new(&ledger_file_path).exists() {
-      if !Path::new(&ledger_storage_path).exists() {
-        let _ = std::fs::create_dir_all(ledger_storage_path.clone());
-      }
-      let url =
-        format!("https://{bucket_name}.s3.us-west-2.amazonaws.com/{network}/{network}-{epoch}-{hash}.json.tar.gz");
-      tracing::info!("Ledger path not found, downloading {} to {}", url, ledger_file_path);
-      let response = reqwest::get(url).await.unwrap();
-      if response.status().is_success() {
-        // Get the object body as bytes
-        let body = response.bytes().await.unwrap();
-        let tar_gz = flate2::read::GzDecoder::new(&body[..]);
-        let mut archive = tar::Archive::new(tar_gz);
-        archive.unpack(ledger_storage_path).unwrap();
+  fn preexisting_path(ledger_storage_path: &PathBuf, prefix: &String) -> Result<Option<PathBuf>> {
+    for entry in read_dir(ledger_storage_path)? {
+      let entry = entry?;
+      let path = entry.path();
+      if path.starts_with(prefix) {
+        return Ok(Some(path));
       }
     }
+    Ok(None)
+  }
+
+  async fn download(
+    ledger_storage_path: &PathBuf,
+    network: &Network,
+    bucket_name: &String,
+    epoch: &i64,
+  ) -> Result<PathBuf> {
+    let client = s3_client();
+    let ListObjectsV2Output { contents, .. } =
+      client.list_objects_v2().bucket(bucket_name).prefix(format!("{network}/{network}-{epoch}")).send().await?;
+    let Object { key: maybe_key, .. } =
+      contents.and_then(|x| x.first().cloned()).ok_or(anyhow!("No such dump exists"))?;
+    if let Some(key) = maybe_key {
+      let bytes = client.get_object().bucket(bucket_name).key(&key).send().await?.body.collect().await?.into_bytes();
+      let tar_gz = GzDecoder::new(&bytes[..]);
+      let mut archive = Archive::new(tar_gz);
+      archive.unpack(ledger_storage_path)?;
+      let mut path_buf = ledger_storage_path.clone();
+      path_buf.push(key);
+      return Ok(path_buf);
+    }
+    bail!("Could not access filename vector");
+  }
+
+  pub async fn fetch(
+    ledger_storage_path: &PathBuf,
+    network: &Network,
+    bucket_name: &String,
+    epoch: &i64,
+  ) -> Result<Ledger> {
+    let prefix = format!("{network}/{network}-{epoch}-");
+    let downloaded_path = Self::preexisting_path(ledger_storage_path, &prefix)?
+      .unwrap_or(Self::download(ledger_storage_path, network, bucket_name, epoch).await?);
+
     let mut bytes = Vec::new();
-    println!("Trying to access: {}", ledger_file_path);
-    std::fs::File::open(ledger_file_path).unwrap().read_to_end(&mut bytes).unwrap();
+    println!("Trying to access: {}", downloaded_path.to_str().unwrap());
+    std::fs::File::open(downloaded_path).unwrap().read_to_end(&mut bytes).unwrap();
     Ok(Ledger(serde_json::from_slice(&bytes).unwrap()))
   }
 

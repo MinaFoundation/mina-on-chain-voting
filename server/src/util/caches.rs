@@ -6,7 +6,7 @@ use std::sync::Arc;
 pub struct Caches {
   pub votes: MokaCache<String, Arc<Vec<Vote>>>,
   pub votes_weighted: MokaCache<String, Arc<Vec<VoteWithWeight>>>,
-  pub ledger: MokaCache<String, Arc<Vec<LedgerAccount>>>,
+  pub ledger: MokaCache<i64, Arc<Vec<LedgerAccount>>>,
 }
 
 impl Caches {

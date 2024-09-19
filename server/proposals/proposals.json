@@ -10,7 +10,6 @@
       "start_time": 1672848000000,
       "end_time": 1673685000000,
       "epoch": 46,
-      "ledger_hash": "jxQXzUkst2L9Ma9g9YQ3kfpgB5v5Znr1vrYb1mupakc5y7T89H8",
       "url": "https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-remove-supercharged-rewards.md",
       "version": "V1",
       "network": "mainnet"
@@ -24,7 +23,6 @@
       "start_time": 1684562400000,
       "end_time": 1685253600000,
       "epoch": 55,
-      "ledger_hash": "jw8dXuUqXVgd6NvmpryGmFLnRv1176oozHAro8gMFwj8yuvhBeS",
       "url": "https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-kimchi.md",
       "version": "V2",
       "network": "mainnet"
@@ -38,7 +36,6 @@
       "start_time": 1684562400000,
       "end_time": 1685253600000,
       "epoch": 55,
-      "ledger_hash": "jw8dXuUqXVgd6NvmpryGmFLnRv1176oozHAro8gMFwj8yuvhBeS",
       "url": "https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-zkapps.md",
       "version": "V2",
       "network": "mainnet"
@@ -52,7 +49,6 @@
       "start_time": 1726170486000,
       "end_time": 1726789686000,
       "epoch": 73,
-      "ledger_hash": "jw8dXuUqXVgd6NvmpryGmFLnRv1176oozHAro8gMFwj8yuvhBeS",
       "url": "",
       "version": "V2",
       "network": "devnet"
@@ -66,7 +62,6 @@
       "start_time": 1726170486000,
       "end_time": 1726789686000,
       "epoch": 73,
-      "ledger_hash": "jw8dXuUqXVgd6NvmpryGmFLnRv1176oozHAro8gMFwj8yuvhBeS",
       "url": "",
       "version": "V2",
       "network": "devnet"
@@ -80,7 +75,6 @@
       "start_time": 1726170486000,
       "end_time": 1726789686000,
       "epoch": 73,
-      "ledger_hash": "jw8dXuUqXVgd6NvmpryGmFLnRv1176oozHAro8gMFwj8yuvhBeS",
       "url": "",
       "version": "V2",
       "network": "devnet"
