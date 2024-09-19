@@ -1,4 +1,4 @@
-use crate::{util::s3_client, Network, ProposalVersion, Vote, Wrapper};
+use crate::{util::s3_client, Ocv, ProposalVersion, Vote, Wrapper};
 use anyhow::{anyhow, bail, Result};
 use aws_sdk_s3::{operation::list_objects_v2::ListObjectsV2Output, types::Object};
 use flate2::read::GzDecoder;
@@ -13,8 +13,7 @@ pub struct Ledger(pub Vec<LedgerAccount>);
 impl Ledger {
   fn preexisting_path(ledger_storage_path: &PathBuf, prefix: &String) -> Result<Option<PathBuf>> {
     for entry in read_dir(ledger_storage_path)? {
-      let entry = entry?;
-      let path = entry.path();
+      let path = entry?.path();
       if path.starts_with(prefix) {
         return Ok(Some(path));
       }
@@ -22,39 +21,33 @@ impl Ledger {
     Ok(None)
   }
 
-  async fn download(
-    ledger_storage_path: &PathBuf,
-    network: &Network,
-    bucket_name: &String,
-    epoch: &i64,
-  ) -> Result<PathBuf> {
+  async fn download(ocv: &Ocv, epoch: &i64) -> Result<PathBuf> {
     let client = s3_client();
-    let ListObjectsV2Output { contents, .. } =
-      client.list_objects_v2().bucket(bucket_name).prefix(format!("{network}/{network}-{epoch}")).send().await?;
+    let ListObjectsV2Output { contents, .. } = client
+      .list_objects_v2()
+      .bucket(&ocv.bucket_name)
+      .prefix(format!("{}/{}-{epoch}", ocv.network, ocv.network))
+      .send()
+      .await?;
     let Object { key: maybe_key, .. } =
       contents.and_then(|x| x.first().cloned()).ok_or(anyhow!("No such dump exists"))?;
     if let Some(key) = maybe_key {
-      let bytes = client.get_object().bucket(bucket_name).key(&key).send().await?.body.collect().await?.into_bytes();
+      let bytes =
+        client.get_object().bucket(&ocv.bucket_name).key(&key).send().await?.body.collect().await?.into_bytes();
       let tar_gz = GzDecoder::new(&bytes[..]);
       let mut archive = Archive::new(tar_gz);
-      archive.unpack(ledger_storage_path)?;
-      let mut path_buf = ledger_storage_path.clone();
+      archive.unpack(&ocv.ledger_storage_path)?;
+      let mut path_buf = ocv.ledger_storage_path.clone();
       path_buf.push(key);
       return Ok(path_buf);
     }
     bail!("Could not access filename vector");
   }
 
-  pub async fn fetch(
-    ledger_storage_path: &PathBuf,
-    network: &Network,
-    bucket_name: &String,
-    epoch: &i64,
-  ) -> Result<Ledger> {
-    let prefix = format!("{network}/{network}-{epoch}-");
-    let downloaded_path = Self::preexisting_path(ledger_storage_path, &prefix)?
-      .unwrap_or(Self::download(ledger_storage_path, network, bucket_name, epoch).await?);
-
+  pub async fn fetch(ocv: &Ocv, epoch: &i64) -> Result<Ledger> {
+    let prefix = format!("{}/{}-{epoch}-", ocv.network, ocv.network);
+    let downloaded_path =
+      Self::preexisting_path(&ocv.ledger_storage_path, &prefix)?.unwrap_or(Self::download(ocv, epoch).await?);
     let mut bytes = Vec::new();
     println!("Trying to access: {}", downloaded_path.to_str().unwrap());
     std::fs::File::open(downloaded_path).unwrap().read_to_end(&mut bytes).unwrap();

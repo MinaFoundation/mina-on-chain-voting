@@ -45,8 +45,7 @@ impl Ocv {
 
   pub async fn proposal_result(&self, id: usize) -> Result<GetMinaProposalResultResponse> {
     let proposal = self.proposals_manifest.proposal(id)?;
-    let epoch;
-    match proposal.epoch {
+    let epoch = match proposal.epoch {
       None => {
         return Ok(GetMinaProposalResultResponse {
           proposal,
@@ -56,9 +55,7 @@ impl Ocv {
           votes: Vec::new(),
         });
       }
-      Some(v) => {
-        epoch = v;
-      }
+      Some(v) => v,
     };
 
     let votes = if let Some(cached_votes) = self.caches.votes_weighted.get(&proposal.key).await {
@@ -71,7 +68,7 @@ impl Ocv {
       let ledger = if let Some(cached_ledger) = self.caches.ledger.get(&epoch).await {
         Ledger(cached_ledger.to_vec())
       } else {
-        let ledger = Ledger::fetch(&self.ledger_storage_path, &self.network, &self.bucket_name, &epoch).await?;
+        let ledger = Ledger::fetch(&self, &epoch).await?;
 
         self.caches.ledger.insert(epoch, Arc::new(ledger.0.clone())).await;
 
