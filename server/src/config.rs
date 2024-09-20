@@ -1,7 +1,8 @@
 use crate::{Archive, Caches, Ocv, ProposalsManifest};
 use anyhow::Result;
 use clap::{Args, Parser, ValueEnum};
-use std::fmt;
+use derive_more::Display;
+use std::{fs, path::PathBuf, str::FromStr};
 
 #[derive(Clone, Args)]
 pub struct OcvConfig {
@@ -22,32 +23,26 @@ pub struct OcvConfig {
   pub ledger_storage_path: String,
 }
 
+#[derive(Clone, Copy, Parser, ValueEnum, Debug, Display)]
+pub enum Network {
+  #[display("mainnet")]
+  Mainnet,
+  #[display("devnet")]
+  Devnet,
+  #[display("berkeley")]
+  Berkeley,
+}
+
 impl OcvConfig {
   pub async fn to_ocv(&self) -> Result<Ocv> {
+    fs::create_dir_all(&self.ledger_storage_path)?;
     Ok(Ocv {
       caches: Caches::build(),
       archive: Archive::new(&self.archive_database_url),
       network: self.mina_network,
-      ledger_storage_path: self.ledger_storage_path.clone(),
+      ledger_storage_path: PathBuf::from_str(&self.ledger_storage_path)?,
       bucket_name: self.bucket_name.clone(),
       proposals_manifest: ProposalsManifest::load(&self.maybe_proposals_url).await?,
     })
-  }
-}
-
-#[derive(Clone, Copy, Parser, ValueEnum, Debug)]
-pub enum Network {
-  Mainnet,
-  Devnet,
-  Berkeley,
-}
-
-impl fmt::Display for Network {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    match self {
-      Network::Mainnet => write!(f, "mainnet"),
-      Network::Devnet => write!(f, "devnet"),
-      Network::Berkeley => write!(f, "berkeley"),
-    }
   }
 }

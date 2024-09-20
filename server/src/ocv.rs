@@ -2,14 +2,14 @@ use crate::{util::Caches, Archive, Ledger, Network, Proposal, ProposalsManifest,
 use anyhow::Result;
 use rust_decimal::Decimal;
 use serde::Serialize;
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 
 #[derive(Clone)]
 pub struct Ocv {
   pub caches: Caches,
   pub archive: Archive,
   pub network: Network,
-  pub ledger_storage_path: String,
+  pub ledger_storage_path: PathBuf,
   pub bucket_name: String,
   pub proposals_manifest: ProposalsManifest,
 }
@@ -45,16 +45,18 @@ impl Ocv {
 
   pub async fn proposal_result(&self, id: usize) -> Result<GetMinaProposalResultResponse> {
     let proposal = self.proposals_manifest.proposal(id)?;
-    if proposal.ledger_hash.is_none() {
-      return Ok(GetMinaProposalResultResponse {
-        proposal,
-        total_stake_weight: Decimal::ZERO,
-        positive_stake_weight: Decimal::ZERO,
-        negative_stake_weight: Decimal::ZERO,
-        votes: Vec::new(),
-      });
-    }
-    let hash = proposal.ledger_hash.clone().expect("hash should always be present");
+    let hash = match proposal.ledger_hash.clone() {
+      None => {
+        return Ok(GetMinaProposalResultResponse {
+          proposal,
+          total_stake_weight: Decimal::ZERO,
+          positive_stake_weight: Decimal::ZERO,
+          negative_stake_weight: Decimal::ZERO,
+          votes: Vec::new(),
+        });
+      }
+      Some(value) => value,
+    };
 
     let votes = if let Some(cached_votes) = self.caches.votes_weighted.get(&proposal.key).await {
       cached_votes.to_vec()
@@ -66,14 +68,8 @@ impl Ocv {
       let ledger = if let Some(cached_ledger) = self.caches.ledger.get(&hash).await {
         Ledger(cached_ledger.to_vec())
       } else {
-        let ledger = Ledger::fetch(
-          &hash,
-          self.ledger_storage_path.clone(),
-          self.network,
-          self.bucket_name.clone(),
-          proposal.epoch,
-        )
-        .await?;
+        let ledger = Ledger::fetch(self, &hash).await?;
+        println!("Made it here");
 
         self.caches.ledger.insert(hash, Arc::new(ledger.0.clone())).await;
 
