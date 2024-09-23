@@ -27,15 +27,13 @@ impl Ledger {
       .send()
       .await?
       .contents
-      .unwrap()
-      .into_iter()
-      .find(|object| match object.key {
-        Some(ref key) => key.contains(hash),
-        None => false,
+      .and_then(|objects| {
+        objects
+          .into_iter()
+          .find(|object| object.key.as_ref().map_or(false, |key| key.contains(hash)))
+          .and_then(|x| x.key)
       })
-      .unwrap()
-      .key
-      .unwrap();
+      .ok_or(anyhow!("Could not retrieve dump corresponding to {hash}"))?;
     let bytes =
       client.get_object().bucket(&ocv.bucket_name).key(&s3_path).send().await?.body.collect().await?.into_bytes();
     let tar_gz = GzDecoder::new(&bytes[..]);
