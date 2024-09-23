@@ -1,42 +1,54 @@
-use crate::{Network, ProposalVersion, Vote, Wrapper};
+use crate::{s3_client, Ocv, ProposalVersion, Vote, Wrapper};
 use anyhow::{anyhow, Result};
+use flate2::read::GzDecoder;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, io::Read, path::Path};
+use std::{collections::HashMap, fs, io::Read, path::PathBuf};
+use tar::Archive;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Ledger(pub Vec<LedgerAccount>);
 
 impl Ledger {
-  pub async fn fetch(
-    hash: impl Into<String>,
-    ledger_storage_path: String,
-    network: Network,
-    bucket_name: String,
-    epoch: i64,
-  ) -> Result<Ledger> {
-    let hash: String = hash.into();
-    let ledger_file_path = format!("{ledger_storage_path}/{network}-{epoch}-{hash}.json");
-    if !Path::new(&ledger_file_path).exists() {
-      if !Path::new(&ledger_storage_path).exists() {
-        let _ = std::fs::create_dir_all(ledger_storage_path.clone());
-      }
-      let url =
-        format!("https://{bucket_name}.s3.us-west-2.amazonaws.com/{network}/{network}-{epoch}-{hash}.json.tar.gz");
-      tracing::info!("Ledger path not found, downloading {} to {}", url, ledger_file_path);
-      let response = reqwest::get(url).await.unwrap();
-      if response.status().is_success() {
-        // Get the object body as bytes
-        let body = response.bytes().await.unwrap();
-        let tar_gz = flate2::read::GzDecoder::new(&body[..]);
-        let mut archive = tar::Archive::new(tar_gz);
-        archive.unpack(ledger_storage_path).unwrap();
+  pub async fn fetch(ocv: &Ocv, hash: &String) -> Result<Ledger> {
+    let dest = ocv.ledger_storage_path.join(format!("{hash}.json"));
+    if !dest.exists() {
+      Self::download(ocv, hash, &dest).await?;
+    }
+    let contents = fs::read(dest)?;
+    Ok(Ledger(serde_json::from_slice(&contents[..]).unwrap()))
+  }
+
+  async fn download(ocv: &Ocv, hash: &String, to: &PathBuf) -> Result<()> {
+    let client = s3_client();
+    let s3_path = client
+      .list_objects_v2()
+      .bucket(&ocv.bucket_name)
+      .send()
+      .await?
+      .contents
+      .and_then(|objects| {
+        objects
+          .into_iter()
+          .find(|object| object.key.as_ref().map_or(false, |key| key.contains(hash)))
+          .and_then(|x| x.key)
+      })
+      .ok_or(anyhow!("Could not retrieve dump corresponding to {hash}"))?;
+    let bytes =
+      client.get_object().bucket(&ocv.bucket_name).key(&s3_path).send().await?.body.collect().await?.into_bytes();
+    let tar_gz = GzDecoder::new(&bytes[..]);
+    let mut archive = Archive::new(tar_gz);
+    for entry in archive.entries()? {
+      let mut entry = entry?;
+      let path = entry.path()?.to_str().unwrap().to_owned();
+      if s3_path.contains(&path) {
+        let mut buffer = Vec::new();
+        entry.read_to_end(&mut buffer)?;
+        fs::write(to, buffer)?;
+        break;
       }
     }
-    let mut bytes = Vec::new();
-    println!("Trying to access: {}", ledger_file_path);
-    std::fs::File::open(ledger_file_path).unwrap().read_to_end(&mut bytes).unwrap();
-    Ok(Ledger(serde_json::from_slice(&bytes).unwrap()))
+    Ok(())
   }
 
   pub fn get_stake_weight(

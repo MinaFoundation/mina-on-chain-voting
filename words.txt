@@ -1,6 +1,8 @@
 codebases
 delegators
 devnet
+dotenv
+flate
 lightnet
 mina
 moka

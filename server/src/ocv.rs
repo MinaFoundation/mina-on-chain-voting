@@ -1,17 +1,17 @@
-use crate::{util::Caches, Archive, Ledger, Network, Proposal, ProposalsManifest, Vote, VoteWithWeight, Wrapper};
-use anyhow::Result;
+use crate::{util::Caches, Archive, Ledger, Network, Proposal, Vote, VoteWithWeight, Wrapper};
+use anyhow::{anyhow, Result};
 use rust_decimal::Decimal;
 use serde::Serialize;
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 
 #[derive(Clone)]
 pub struct Ocv {
   pub caches: Caches,
   pub archive: Archive,
   pub network: Network,
-  pub ledger_storage_path: String,
+  pub ledger_storage_path: PathBuf,
   pub bucket_name: String,
-  pub proposals_manifest: ProposalsManifest,
+  pub proposals: Vec<Proposal>,
 }
 
 impl Ocv {
@@ -22,7 +22,7 @@ impl Ocv {
   }
 
   pub async fn proposal(&self, id: usize) -> Result<ProposalResponse> {
-    let proposal = self.proposals_manifest.proposal(id)?;
+    let proposal = self.find_proposal(id)?;
 
     if let Some(cached) = self.caches.votes.get(&proposal.key).await {
       return Ok(ProposalResponse { proposal, votes: cached.to_vec() });
@@ -44,17 +44,19 @@ impl Ocv {
   }
 
   pub async fn proposal_result(&self, id: usize) -> Result<GetMinaProposalResultResponse> {
-    let proposal = self.proposals_manifest.proposal(id)?;
-    if proposal.ledger_hash.is_none() {
-      return Ok(GetMinaProposalResultResponse {
-        proposal,
-        total_stake_weight: Decimal::ZERO,
-        positive_stake_weight: Decimal::ZERO,
-        negative_stake_weight: Decimal::ZERO,
-        votes: Vec::new(),
-      });
-    }
-    let hash = proposal.ledger_hash.clone().expect("hash should always be present");
+    let proposal = self.find_proposal(id)?;
+    let hash = match proposal.ledger_hash.clone() {
+      None => {
+        return Ok(GetMinaProposalResultResponse {
+          proposal,
+          total_stake_weight: Decimal::ZERO,
+          positive_stake_weight: Decimal::ZERO,
+          negative_stake_weight: Decimal::ZERO,
+          votes: Vec::new(),
+        });
+      }
+      Some(value) => value,
+    };
 
     let votes = if let Some(cached_votes) = self.caches.votes_weighted.get(&proposal.key).await {
       cached_votes.to_vec()
@@ -66,14 +68,7 @@ impl Ocv {
       let ledger = if let Some(cached_ledger) = self.caches.ledger.get(&hash).await {
         Ledger(cached_ledger.to_vec())
       } else {
-        let ledger = Ledger::fetch(
-          &hash,
-          self.ledger_storage_path.clone(),
-          self.network,
-          self.bucket_name.clone(),
-          proposal.epoch,
-        )
-        .await?;
+        let ledger = Ledger::fetch(self, &hash).await?;
 
         self.caches.ledger.insert(hash, Arc::new(ledger.0.clone())).await;
 
@@ -108,6 +103,10 @@ impl Ocv {
       negative_stake_weight,
       votes,
     })
+  }
+
+  fn find_proposal(&self, id: usize) -> Result<Proposal> {
+    Ok(self.proposals.iter().find(|proposal| proposal.id == id).ok_or(anyhow!("Proposal {id} dne."))?.to_owned())
   }
 }
 
