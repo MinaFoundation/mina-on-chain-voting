@@ -1,5 +1,5 @@
-use crate::{util::Caches, Archive, Ledger, Network, Proposal, ProposalsManifest, Vote, VoteWithWeight, Wrapper};
-use anyhow::Result;
+use crate::{util::Caches, Archive, Ledger, Network, Proposal, Vote, VoteWithWeight, Wrapper};
+use anyhow::{anyhow, Result};
 use rust_decimal::Decimal;
 use serde::Serialize;
 use std::{path::PathBuf, sync::Arc};
@@ -11,7 +11,7 @@ pub struct Ocv {
   pub network: Network,
   pub ledger_storage_path: PathBuf,
   pub bucket_name: String,
-  pub proposals_manifest: ProposalsManifest,
+  pub proposals: Vec<Proposal>,
 }
 
 impl Ocv {
@@ -22,7 +22,7 @@ impl Ocv {
   }
 
   pub async fn proposal(&self, id: usize) -> Result<ProposalResponse> {
-    let proposal = self.proposals_manifest.proposal(id)?;
+    let proposal = self.find_proposal(id)?;
 
     if let Some(cached) = self.caches.votes.get(&proposal.key).await {
       return Ok(ProposalResponse { proposal, votes: cached.to_vec() });
@@ -44,7 +44,7 @@ impl Ocv {
   }
 
   pub async fn proposal_result(&self, id: usize) -> Result<GetMinaProposalResultResponse> {
-    let proposal = self.proposals_manifest.proposal(id)?;
+    let proposal = self.find_proposal(id)?;
     let hash = match proposal.ledger_hash.clone() {
       None => {
         return Ok(GetMinaProposalResultResponse {
@@ -104,6 +104,10 @@ impl Ocv {
       negative_stake_weight,
       votes,
     })
+  }
+
+  fn find_proposal(&self, id: usize) -> Result<Proposal> {
+    Ok(self.proposals.iter().find(|proposal| proposal.id == id).ok_or(anyhow!("Proposal {id} dne."))?.to_owned())
   }
 }
 

@@ -14,6 +14,7 @@ clap = { version = "4.1.4", features = ["derive", "env"] }
 derive_more = { version = "1.0.0", features = ["full"] }
 diesel = { version = "2.0.3", features = ["postgres", "r2d2", "numeric"] }
 diesel-derive-enum = { version = "2.0.0", features = ["postgres"] }
+dotenv = "0.15.0"
 flate2 = "1.0.33"
 futures-util = "0.3"
 moka = { version = "0.12.0", features = ["future"] }

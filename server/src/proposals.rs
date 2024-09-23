@@ -1,30 +1,10 @@
-use anyhow::{anyhow, Result};
-use bytes::Bytes;
 use serde::{Deserialize, Serialize};
+
+use crate::Network;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct ProposalsManifest {
   pub proposals: Vec<Proposal>,
-}
-
-static PROPOSALS_MANIFEST_GITHUB_URL: &str =
-  "https://raw.githubusercontent.com/MinaFoundation/mina-on-chain-voting/main/server/proposals/proposals.json";
-
-impl ProposalsManifest {
-  pub async fn load(maybe_proposals_url: &Option<String>) -> Result<Self> {
-    let manifest_bytes = match maybe_proposals_url {
-      Some(url) => {
-        let url = if url.is_empty() { &PROPOSALS_MANIFEST_GITHUB_URL.to_string() } else { url };
-        reqwest::Client::new().get(url).send().await?.bytes().await?
-      }
-      None => Bytes::from_static(include_bytes!("../proposals/proposals.json")),
-    };
-    Ok(serde_json::from_slice(manifest_bytes.as_ref())?)
-  }
-
-  pub fn proposal(&self, id: usize) -> Result<Proposal> {
-    self.proposals.get(id).cloned().ok_or(anyhow!("Could not retrieve proposal with ID {}", id))
-  }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -40,6 +20,7 @@ pub struct Proposal {
   pub title: String,
   pub description: String,
   pub url: String,
+  pub network: Network,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

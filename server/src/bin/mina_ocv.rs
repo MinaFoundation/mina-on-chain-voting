@@ -54,7 +54,7 @@ async fn get_info(ctx: State<Arc<Ocv>>) -> Response {
 #[debug_handler]
 async fn get_proposals(ctx: State<Arc<Ocv>>) -> Response {
   tracing::info!("get_proposals");
-  Json(ctx.proposals_manifest.proposals.clone()).into_response()
+  Json(ctx.proposals.clone()).into_response()
 }
 
 #[debug_handler]
