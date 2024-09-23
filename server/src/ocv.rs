@@ -69,7 +69,6 @@ impl Ocv {
         Ledger(cached_ledger.to_vec())
       } else {
         let ledger = Ledger::fetch(self, &hash).await?;
-        println!("Made it here");
 
         self.caches.ledger.insert(hash, Arc::new(ledger.0.clone())).await;
 
