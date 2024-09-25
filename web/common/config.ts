@@ -1,6 +1,6 @@
 export const siteConfig = {
-  title: 'mina.vote',
-  url: 'https://mina.vote/',
+  title: 'Mina On-chain Voting',
+  url: 'https://on-chain-voting.minaprotocol.network/',
   nav: [
     {
       title: 'FAQ',
@@ -8,8 +8,9 @@ export const siteConfig = {
     },
   ],
   links: {
-    github: 'https://github.com/Granola-Team/mina-on-chain-voting',
+    github: 'https://github.com/MinaFoundation/mina-on-chain-voting',
     granola: 'https://granola.team',
+    minaFoundation: 'https://www.minafoundation.com',
     FAQ: 'https://forums.minaprotocol.com/t/on-chain-voting-frequently-asked-questions-faq/5959',
   },
 };

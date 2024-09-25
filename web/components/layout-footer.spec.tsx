@@ -16,6 +16,7 @@ describe(TestVariant.Component, () => {
     it('renders component', () => {
       const gLink = screen.getByRole('link', { name: /Granola/i });
       expect(gLink).toHaveAttribute('href', siteConfig.links.granola);
+      expect(gLink).toHaveAttribute('href', siteConfig.links.minaFoundation);
       expect(gLink).toBeVisible();
     });
   });
