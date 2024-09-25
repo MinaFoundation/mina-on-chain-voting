@@ -14,7 +14,15 @@ export const Footer = () => {
           >
             Granola
           </a>
-          .
+          {" and "}
+          <a
+            href={siteConfig.links.minaFoundation}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium underline underline-offset-4 text-logoOrange"
+          >
+            Mina Foundation
+          </a>
         </p>
       </div>
     </footer>
