@@ -81,6 +81,19 @@
       "url": "",
       "version": "V2",
       "network": "devnet"
+    },
+    {
+      "id": 6,
+      "key": "MIP5",
+      "category": "Core",
+      "title": "MIP Upgrade",
+      "description": "Introduces some major improvements to the MIP process, ensuring that the governance of Mina Protocol becomes more transparent, effective, and aligned with the wishes of the community.",
+      "start_time": 1731736800000,
+      "end_time": 1732914000000,
+      "epoch": 12,
+      "url": "https://docs.google.com/document/d/1nX5CeSJxebpbyN74cGgiFM0Xv8zXJFr8yhM1spLe7KY",
+      "version": "V2",
+      "network": "mainnet"
     }
   ]
 }
