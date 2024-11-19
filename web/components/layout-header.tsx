@@ -11,7 +11,14 @@ import { ThemeToggle } from 'components/theme-toggle';
 
 export const Header = () => {
   return (
-    <header className="supports-backdrop-blur:bg-background/60 sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+    <header
+      className="sticky top-0 z-50 w-full bg-header-gradient backdrop-blur"
+      style={{
+        background:
+          'linear-gradient(90deg, rgba(49,130,206,1) 0%, rgba(130,113,194,1) 50%, rgba(175,120,219,1) 75%, rgba(141,188,235,1) 100%)',
+        padding: '40px 0',
+      }}
+    >
       <div className="container flex h-14 items-center">
         <NavigationDesktop />
         <NavigationMobile />
@@ -23,7 +30,7 @@ export const Header = () => {
                   buttonVariants({
                     variant: 'ghost',
                   }),
-                  'w-9 px-0'
+                  'w-9 px-0',
                 )}
               >
                 <span className="hover:text-foreground/80">FAQ</span>
@@ -35,7 +42,7 @@ export const Header = () => {
                   buttonVariants({
                     variant: 'ghost',
                   }),
-                  'w-9 px-0'
+                  'w-9 px-0',
                 )}
               >
                 <Icons.gitHub className="h-4 w-4" />
