@@ -33,7 +33,7 @@ export const Header = () => {
                   'w-9 px-0',
                 )}
               >
-                <span className="hover:text-foreground/80">FAQ</span>
+                <span className="text-white hover:text-foreground/80">FAQ</span>
               </div>
             </Link>
             <Link href={siteConfig.links.github}>
@@ -45,7 +45,7 @@ export const Header = () => {
                   'w-9 px-0',
                 )}
               >
-                <Icons.gitHub className="h-4 w-4" />
+                <Icons.gitHub className="h-4 w-4 text-white hover:text-foreground/80" />
                 <span className="sr-only">GitHub</span>
               </div>
             </Link>

@@ -3,8 +3,51 @@ import { siteConfig } from 'common/config';
 export const Footer = () => {
   return (
     <footer className="py-6 md:px-8 md:py-0">
-      <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
-        <p className="text-center text-xs leading-loose text-muted-foreground md:text-left">
+      <div className="container mx-auto items-center md:h-24 md:flex-row">
+        {/* Main Footer Content */}
+        <div className="flex flex-col lg:flex-row justify-between items-center lg:items-start space-y-4 lg:space-y-0">
+          {/* Copyright Text */}
+          <p className="text-gray-400 text-sm">© 2024 Mina Foundation. All rights reserved.</p>
+
+          {/* Links */}
+          <div className="flex flex-col lg:flex-row items-center space-y-2 lg:space-y-0 lg:space-x-6">
+            <a
+              href="https://github.com/MinaProtocol/mina/blob/develop/CODE_OF_CONDUCT.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 text-sm hover:text-white"
+            >
+              Code of Conduct
+            </a>
+            <a
+              href="https://minaprotocol.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 text-sm hover:text-white"
+            >
+              Privacy Policy
+            </a>
+            <a
+              href="https://minaprotocol.com/tos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 text-sm hover:text-white"
+            >
+              Terms of Service
+            </a>
+            <a
+              href="https://minaprotocol.com/impressum"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 text-sm hover:text-white"
+            >
+              Impressum
+            </a>
+          </div>
+        </div>
+
+        {/* Built by Granola */}
+        <div className="mt-4 text-gray-400 text-sm text-center lg:text-left">
           Built by{' '}
           <a
             href={siteConfig.links.granola}
@@ -14,7 +57,7 @@ export const Footer = () => {
           >
             Granola
           </a>
-        </p>
+        </div>
       </div>
     </footer>
   );
