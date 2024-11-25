@@ -81,6 +81,32 @@
       "url": "",
       "version": "V2",
       "network": "devnet"
+    },
+    {
+      "id": 6,
+      "key": "ERC1",
+      "category": "ERC",
+      "title": "Proposal test 1",
+      "description": "",
+      "start_time": 1732071600000,
+      "end_time": 1734663600000,
+      "epoch": 11,
+      "url": "",
+      "version": "V2",
+      "network": "devnet"
+    },
+    {
+      "id": 7,
+      "key": "ERC2",
+      "category": "ERC",
+      "title": "Proposal test 2",
+      "description": "",
+      "start_time": 1735614000000,
+      "end_time": 1737342000000,
+      "epoch": 12,
+      "url": "",
+      "version": "V2",
+      "network": "devnet"
     }
   ]
 }
