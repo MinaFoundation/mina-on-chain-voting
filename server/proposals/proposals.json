@@ -52,6 +52,7 @@
       "start_time": 1726171350000,
       "end_time": 1726687661000,
       "epoch": 11,
+      "ledger_hash": "jxKS2hAAJESTZQvMZWDQ9tqfqJ8usxDFHc1YVyqWE5eySg9892X",
       "url": "",
       "version": "V2",
       "network": "devnet"
@@ -65,6 +66,7 @@
       "start_time": 1726171350000,
       "end_time": 1726687661000,
       "epoch": 11,
+      "ledger_hash": "jwrZGWCpi76cjuWwXXDf1wdFMRzSNK51zU8KBrCUCv3igqDuaCP",
       "url": "",
       "version": "V2",
       "network": "devnet"
@@ -78,6 +80,7 @@
       "start_time": 1726171350000,
       "end_time": 1726687661000,
       "epoch": 11,
+      "ledger_hash": "jwrZGWCpi76cjuWwXXDf1wdFMRzSNK51zU8KBrCUCv3igqDuaCP",
       "url": "",
       "version": "V2",
       "network": "devnet"
