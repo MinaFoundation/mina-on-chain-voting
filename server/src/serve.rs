@@ -40,7 +40,7 @@ impl ServeArgs {
       .route("/api/proposals", get(get_proposals))
       .route("/api/proposal/:id", get(get_proposal))
       .route("/api/proposal/:id/results", get(get_proposal_result))
-      .route("/api/erc_proposal/:id/consideration", get(get_proposal_consideration))
+      .route("/api/mef_proposal_consideration/:id/:start_time/:end_time", get(get_proposal_consideration))
       .layer(CorsLayer::permissive())
       .with_state(Arc::new(ocv));
     axum_serve(listener, router).with_graceful_shutdown(shutdown_signal()).await?;
@@ -73,7 +73,10 @@ async fn get_proposal_result(ctx: State<Arc<Ocv>>, Path(id): Path<usize>) -> imp
 }
 
 #[debug_handler]
-async fn get_proposal_consideration(ctx: State<Arc<Ocv>>, Path(id): Path<usize>) -> impl IntoResponse {
-  tracing::info!("get_proposal_consideration {}", id);
-  Wrapper(ctx.proposal_consideration(id).await)
+async fn get_proposal_consideration(
+  ctx: State<Arc<Ocv>>, 
+  Path((id, start_time, end_time)): Path<(usize, i64, i64)>
+) -> impl IntoResponse {
+  tracing::info!("get_proposal_consideration {} {} {}", id, start_time, end_time);
+  Wrapper(ctx.proposal_consideration(id, start_time, end_time).await)
 }

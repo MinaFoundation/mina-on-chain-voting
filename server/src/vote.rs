@@ -90,6 +90,16 @@ impl Vote {
     None
   }
 
+  pub fn match_decoded_mef_memo(&mut self, key: &str) -> Option<String> {
+    if let Ok(decoded) = self.decode_memo() {
+      if decoded.to_lowercase() == format!("yes id {}", key) || decoded.to_lowercase() == format!("no id {}", key)
+      {
+        return Some(decoded);
+      }
+    }
+    None
+  }
+
   pub(crate) fn decode_memo(&self) -> Result<String> {
     let decoded =
       bs58::decode(&self.memo).into_vec().with_context(|| format!("failed to decode memo {} - bs58", &self.memo))?;
@@ -115,6 +125,35 @@ impl Wrapper<Vec<Vote>> {
 
     for mut vote in self.0 {
       if let Some(memo) = vote.match_decoded_memo(&key) {
+        vote.update_memo(memo);
+
+        if tip - vote.height >= 10 {
+          vote.update_status(BlockStatus::Canonical);
+        }
+
+        match map.entry(vote.account.clone()) {
+          Entry::Vacant(e) => {
+            e.insert(vote);
+          }
+          Entry::Occupied(mut e) => {
+            let current_vote = e.get_mut();
+            if vote.is_newer_than(current_vote) {
+              *current_vote = vote;
+            }
+          }
+        }
+      }
+    }
+
+    Wrapper(map)
+  }
+
+  pub fn process_mep(self, id: impl Into<String>, tip: i64) -> Wrapper<HashMap<String, Vote>> {
+    let mut map = HashMap::new();
+    let id = id.into();
+
+    for mut vote in self.0 {
+      if let Some(memo) = vote.match_decoded_mef_memo(&id) {
         vote.update_memo(memo);
 
         if tip - vote.height >= 10 {
