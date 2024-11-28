@@ -13,6 +13,7 @@ import { ScrollArea } from 'components/core/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from 'components/core/sheet';
 
 import { ViewVerticalIcon } from '@radix-ui/react-icons';
+import { MinaLogo } from './mina-logo';
 
 export const NavigationMobile = () => {
   const [open, setOpen] = React.useState(false);
@@ -29,9 +30,7 @@ export const NavigationMobile = () => {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="pr-0">
-        <MobileLink href="/" className="flex items-center" onOpenChange={setOpen}>
-          <span className="font-bold">{siteConfig.title}</span>
-        </MobileLink>
+        <MinaLogo />
         <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
           <div className="flex flex-col space-y-3">
             {siteConfig.nav?.map((item) => (

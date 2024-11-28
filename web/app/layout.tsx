@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react';
 
 import { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 
 import { siteConfig } from 'common/config';
 import { cn } from 'common/utils';
@@ -13,7 +13,7 @@ import { Providers } from 'components/providers';
 
 import './globals.css';
 
-const FONT = Inter({ subsets: ['latin'] });
+const FONT = IBM_Plex_Sans({ weight: ['400'], subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: `Mina - ${siteConfig.title}`,
@@ -28,7 +28,7 @@ const Layout = ({ children }: PropsWithChildren) => {
     <html lang="en" suppressHydrationWarning>
       <body className={cn('bg-background antialiased', FONT.className)}>
         <Providers>
-          <div className="relative flex flex-col">
+          <div className="relative flex flex-col min-h-screen">
             <Header />
             <div className="flex-1">{children}</div>
             <Footer />
