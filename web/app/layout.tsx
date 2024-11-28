@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react';
 
 import { Metadata } from 'next';
-import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+import { IBM_Plex_Sans } from 'next/font/google';
 
 import { siteConfig } from 'common/config';
 import { cn } from 'common/utils';
