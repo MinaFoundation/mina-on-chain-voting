@@ -86,14 +86,21 @@ The **Proposal Consideration API** allows users to fetch detailed data about a p
 
 ## Endpoint
 
-### `GET /api/mef_proposal_consideration/:id/:start_time/:end_time`
+### `GET /api/mef_proposal_consideration/:id/:start_time/:end_time?ledger_hash`
 
-### Parameters
+Retrieve details for a specific proposal within a specified time frame. Optionally, you can configure the ledger hash to compute vote weights.
+
+### Path Parameters
 | Parameter    | Type      | Description                                          |
 |--------------|-----------|------------------------------------------------------|
 | `id`         | `integer` | Unique identifier for the proposal.                  |
 | `start_time` | `integer` | Proposal start time in milliseconds unix timestamp.  |
 | `end_time`   | `integer` | Proposal end time in milliseconds unix timestamp.    |
+
+### Query Parameters (optional)
+| Parameter    | Type      | Description                                          |
+|--------------|-----------|------------------------------------------------------|
+| `ledger_hash`         | `string` | Ledger hash used to compute weights of the votes.                  |
 
 ---
 
@@ -110,6 +117,7 @@ The **Proposal Consideration API** allows users to fetch detailed data about a p
 | `negative_stake_weight` | Staking weight opposing the proposal.                          |
 | `vote_status`           | Current status of the proposal.                                |
 
+---
 
 ## Software Development
 
