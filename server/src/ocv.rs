@@ -17,8 +17,12 @@ pub struct Ocv {
 impl Ocv {
   pub async fn info(&self) -> Result<GetCoreApiInfoResponse> {
     let chain_tip = self.archive.fetch_chain_tip()?;
-    let current_slot = self.archive.fetch_latest_slot()?;
-    Ok(GetCoreApiInfoResponse { chain_tip, current_slot })
+    // let current_slot = self.archive.fetch_latest_slot()?;
+    let current_slot = 1;
+    let _epoch = 11;
+    // let ledger_hash = self.archive.fetch_ledger_hash_by_epoch(epoch)?;
+    let latest_block_info = self.archive.fetch_latest_block()?;
+    Ok(GetCoreApiInfoResponse { chain_tip, current_slot, ledger_hash: latest_block_info.ledgerhash, epoch: latest_block_info.epoch })
   }
 
   pub async fn proposal(&self, id: usize) -> Result<ProposalResponse> {
@@ -43,7 +47,7 @@ impl Ocv {
     Ok(ProposalResponse { proposal, votes })
   }
 
-  pub async fn proposal_consideration(&self, id: usize, start_time: i64, end_time: i64) -> Result<GetMinaProposalConsiderationResponse> {
+  pub async fn proposal_consideration(&self, id: usize, start_time: i64, end_time: i64, ledger_hash: Option<String>) -> Result<GetMinaProposalConsiderationResponse> {
     let proposal_key = "MEF".to_string() + &id.to_string();
     let votes = if let Some(cached_votes) = self.caches.votes.get(&proposal_key).await {
       cached_votes.to_vec()
@@ -63,14 +67,13 @@ impl Ocv {
     };
   
     // weighted votes
-    // let mut positive_stake_weight = Decimal::from(0);
-    // let mut negative_stake_weight = Decimal::from(0);
+    let mut positive_stake_weight = Decimal::from(0);
+    let mut negative_stake_weight = Decimal::from(0);
 
     // check community votes
     let mut total_positive_community_votes = 0;
     let mut total_negative_community_votes = 0;
     for vote in &votes {
-      tracing::info!("vote memo {}", vote.memo);
       if vote.memo.to_lowercase() == format!("yes id {}", id.to_string()) {
         total_positive_community_votes += 1;
       }
@@ -94,55 +97,48 @@ impl Ocv {
     }
 
     // Calculate weighted votes 
-    // ToDo for production
-  
-    // let votes = transactions
-    //     .into_iter()
-    //     .filter(|tx| eligible_voters.contains(&tx.sender))
-    //     .map(|tx| Vote {
-    //         voter: tx.sender.clone(),
-    //         weight: ledger.get(&tx.sender).unwrap().balance,
-    //         memo: tx.memo.clone(),
-    //     })
-    //     .collect::<Vec<Vote>>();
+    // Calculate weighted votes if ledger_hash params is provided
+    if let Some(hash) = ledger_hash {
+      let votes_weighted = if let Some(cached_votes) = self.caches.votes_weighted.get(&proposal_key).await {
+        cached_votes.to_vec()
+      } else {
+        let transactions = self.archive.fetch_transactions(start_time, end_time)?;
 
-    // let votes_weighted = if let Some(cached_votes) = self.caches.votes_weighted.get(&proposal.key).await {
-    //   cached_votes.to_vec()
-    // } else {
-    //   let transactions = self.archive.fetch_transactions(proposal.start_time, proposal.end_time)?;
+        let chain_tip = self.archive.fetch_chain_tip()?;
 
-    //   let chain_tip = self.archive.fetch_chain_tip()?;
+        let ledger = if let Some(cached_ledger) = self.caches.ledger.get(&hash).await {
+          Ledger(cached_ledger.to_vec())
+        } else {
+          let ledger = Ledger::fetch(self, &hash).await?;
 
-    //   let ledger = if let Some(cached_ledger) = self.caches.ledger.get(&hash).await {
-    //     Ledger(cached_ledger.to_vec())
-    //   } else {
-    //     let ledger = Ledger::fetch(self, &hash).await?;
+          self.caches.ledger.insert(hash, Arc::new(ledger.0.clone())).await;
 
-    //     self.caches.ledger.insert(hash, Arc::new(ledger.0.clone())).await;
+          ledger
+        };
 
-    //     ledger
-    //   };
+        let votes = Wrapper(transactions.into_iter().map(std::convert::Into::into).collect())
+        .into_weighted_mep(&id, &ledger, chain_tip)
+        .sort_by_timestamp()
+        .0;
 
-    //   let votes = Wrapper(transactions.into_iter().map(std::convert::Into::into).collect())
-    //   .into_weighted(&proposal, &ledger, chain_tip)
-    //   .sort_by_timestamp()
-    //   .0;
+        self.caches.votes_weighted.insert(proposal_key.clone(), Arc::new(votes.clone())).await;
 
-    //   self.caches.votes_weighted.insert(proposal.key.clone(), Arc::new(votes.clone())).await;
+        votes
+      };
+      for vote in &votes_weighted {
+        if vote.memo.to_lowercase() == format!("no id {}", id.to_string()) {
+              negative_stake_weight += vote.weight;
+          }
+          if vote.memo.to_lowercase() == format!("yes id {}", id.to_string()) {
+              positive_stake_weight += vote.weight;
+          }
+          positive_stake_weight += vote.weight;
+      }
+    } else {
+        tracing::info!("ledger_hash is not provided.");
+    }
 
-    //   votes
-    // };
-    // for vote in &votes_weighted {
-    //     if vote.memo.split_whitespace().next().eq(&Some("NOID")) {
-    //         negative_stake_weight += vote.weight;
-    //     }
-    //     if vote.memo.split_whitespace().next().eq(&Some("YESID")) {
-    //         positive_stake_weight += vote.weight;
-    //     }
-    //     positive_stake_weight += vote.weight;
-    //     total_community_votes += 1;
-    // }
-    // let total_stake_weight = positive_stake_weight + negative_stake_weight;
+    let total_stake_weight = positive_stake_weight + negative_stake_weight;
 
 
     // Voting results
@@ -151,9 +147,9 @@ impl Ocv {
         total_community_votes: votes.len(),
         total_positive_community_votes,
         total_negative_community_votes,
-        total_stake_weight: Decimal::ZERO,
-        positive_stake_weight: Decimal::ZERO,
-        negative_stake_weight: Decimal::ZERO,
+        total_stake_weight,
+        positive_stake_weight,
+        negative_stake_weight,
         votes,
         vote_status: "Proposal selected for the next phase".to_string(),
     })
@@ -230,6 +226,9 @@ impl Ocv {
 pub struct GetCoreApiInfoResponse {
   chain_tip: i64,
   current_slot: i64,
+  ledger_hash: String,
+  epoch: i64,
+  // ledgerhash: String,
 }
 
 #[derive(Serialize)]

@@ -1,5 +1,6 @@
 use std::sync::Arc;
-
+use std::collections::HashMap;
+use axum::extract::Query;
 use anyhow::Result;
 use axum::{
   Json, Router, debug_handler,
@@ -75,8 +76,10 @@ async fn get_proposal_result(ctx: State<Arc<Ocv>>, Path(id): Path<usize>) -> imp
 #[debug_handler]
 async fn get_proposal_consideration(
   ctx: State<Arc<Ocv>>, 
-  Path((id, start_time, end_time)): Path<(usize, i64, i64)>
+  Path((id, start_time, end_time)): Path<(usize, i64, i64)>,
+  Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
+  let ledger_hash = params.get("ledger_hash").cloned();
   tracing::info!("get_proposal_consideration {} {} {}", id, start_time, end_time);
-  Wrapper(ctx.proposal_consideration(id, start_time, end_time).await)
+  Wrapper(ctx.proposal_consideration(id, start_time, end_time, ledger_hash).await)
 }

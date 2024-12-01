@@ -191,6 +191,21 @@ impl Wrapper<Vec<Vote>> {
 
     Wrapper(votes_with_stake)
   }
+
+  pub fn into_weighted_mep(self, id: &usize, ledger: &Ledger, tip: i64) -> Wrapper<Vec<VoteWithWeight>> {
+    let votes = self.process_mep(&id.to_string(), tip);
+
+    let votes_with_stake: Vec<VoteWithWeight> = votes
+      .0
+      .iter()
+      .filter_map(|(account, vote)| {
+        let stake = ledger.get_stake_weight_mep(&votes, account).ok()?;
+        Some(vote.to_weighted(stake))
+      })
+      .collect();
+
+    Wrapper(votes_with_stake)
+  }
 }
 
 impl Wrapper<HashMap<String, Vote>> {
