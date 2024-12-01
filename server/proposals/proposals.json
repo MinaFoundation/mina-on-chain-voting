@@ -52,7 +52,6 @@
       "start_time": 1726171350000,
       "end_time": 1726687661000,
       "epoch": 11,
-      "ledger_hash": "jxKS2hAAJESTZQvMZWDQ9tqfqJ8usxDFHc1YVyqWE5eySg9892X",
       "url": "",
       "version": "V2",
       "network": "devnet"
@@ -66,7 +65,6 @@
       "start_time": 1726171350000,
       "end_time": 1726687661000,
       "epoch": 11,
-      "ledger_hash": "jwrZGWCpi76cjuWwXXDf1wdFMRzSNK51zU8KBrCUCv3igqDuaCP",
       "url": "",
       "version": "V2",
       "network": "devnet"
@@ -80,34 +78,6 @@
       "start_time": 1726171350000,
       "end_time": 1726687661000,
       "epoch": 11,
-      "ledger_hash": "jwrZGWCpi76cjuWwXXDf1wdFMRzSNK51zU8KBrCUCv3igqDuaCP",
-      "url": "",
-      "version": "V2",
-      "network": "devnet"
-    },
-    {
-      "id": 6,
-      "key": "ERC1",
-      "category": "ERC",
-      "title": "Proposal test 1",
-      "description": "",
-      "start_time": 1732071600000,
-      "end_time": 1734663600000,
-      "ledger_hash": "3NK2tkzqqK5spR2sZ7tujjqPksL45M3UUrcA4WhCkeiPtnugyE2x",
-      "epoch": 11,
-      "url": "",
-      "version": "V2",
-      "network": "devnet"
-    },
-    {
-      "id": 7,
-      "key": "ERC2",
-      "category": "ERC",
-      "title": "Proposal test 2",
-      "description": "",
-      "start_time": 1735614000000,
-      "end_time": 1737342000000,
-      "epoch": 12,
       "url": "",
       "version": "V2",
       "network": "devnet"
