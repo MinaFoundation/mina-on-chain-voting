@@ -116,6 +116,7 @@ Retrieve details for a specific proposal within a specified time frame. Optional
 | `positive_stake_weight` | Staking weight supporting the proposal.                        |
 | `negative_stake_weight` | Staking weight opposing the proposal.                          |
 | `vote_status`           | Current status of the proposal.                                |
+| `elegible`           | Elegible status                               |
 
 ---
 

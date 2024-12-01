@@ -92,6 +92,7 @@ impl Ocv {
         positive_stake_weight: Decimal::ZERO,
         negative_stake_weight: Decimal::ZERO,
         votes,
+        elegible: false,
         vote_status: "Insufficient voters".to_string(),
     });
     }
@@ -151,6 +152,7 @@ impl Ocv {
         positive_stake_weight,
         negative_stake_weight,
         votes,
+        elegible: true,
         vote_status: "Proposal selected for the next phase".to_string(),
     })
 }
@@ -250,8 +252,6 @@ pub struct GetMinaProposalResultResponse {
 
 #[derive(Serialize)]
 pub struct GetMinaProposalConsiderationResponse {
-  // #[serde(flatten)]
-  // proposal: Proposal,
   proposal_id: usize,
   total_community_votes: usize,
   total_positive_community_votes: usize,
@@ -261,4 +261,5 @@ pub struct GetMinaProposalConsiderationResponse {
   negative_stake_weight: Decimal,
   votes: Vec<Vote>,
   vote_status: String,
+  elegible: bool
 }
