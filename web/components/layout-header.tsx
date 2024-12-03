@@ -24,7 +24,7 @@ export const Header = () => {
         <NavigationMobile />
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-1">
-            <Link href={siteConfig.links.FAQ}>
+            <Link href={siteConfig.links.FAQ} target="_blank">
               <div
                 className={cn(
                   buttonVariants({
@@ -36,7 +36,7 @@ export const Header = () => {
                 <span className="text-white hover:text-foreground/80">FAQ</span>
               </div>
             </Link>
-            <Link href={siteConfig.links.github}>
+            <Link href={siteConfig.links.github} target="_blank">
               <div
                 className={cn(
                   buttonVariants({
