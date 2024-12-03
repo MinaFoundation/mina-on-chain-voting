@@ -101,7 +101,6 @@ impl Ocv {
       });
     }
 
-    // Calculate weighted votes
     // Calculate weighted votes if ledger_hash params is provided
     if let Some(hash) = ledger_hash {
       let votes_weighted = if let Some(cached_votes) = self.caches.votes_weighted.get(&proposal_key).await {
