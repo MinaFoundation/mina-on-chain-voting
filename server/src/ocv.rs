@@ -17,12 +17,8 @@ pub struct Ocv {
 impl Ocv {
   pub async fn info(&self) -> Result<GetCoreApiInfoResponse> {
     let chain_tip = self.archive.fetch_chain_tip()?;
-    // let current_slot = self.archive.fetch_latest_slot()?;
-    let current_slot = 1;
-    let _epoch = 11;
-    // let ledger_hash = self.archive.fetch_ledger_hash_by_epoch(epoch)?;
-    let latest_block_info = self.archive.fetch_latest_block()?;
-    Ok(GetCoreApiInfoResponse { chain_tip, current_slot, ledger_hash: latest_block_info.ledgerhash, epoch: latest_block_info.epoch })
+    let current_slot = self.archive.fetch_latest_slot()?;
+    Ok(GetCoreApiInfoResponse { chain_tip, current_slot })
   }
 
   pub async fn proposal(&self, id: usize) -> Result<ProposalResponse> {
@@ -227,10 +223,7 @@ impl Ocv {
 #[derive(Serialize)]
 pub struct GetCoreApiInfoResponse {
   chain_tip: i64,
-  current_slot: i64,
-  ledger_hash: String,
-  epoch: i64,
-  // ledgerhash: String,
+  current_slot: i64
 }
 
 #[derive(Serialize)]
