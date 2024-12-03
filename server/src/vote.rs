@@ -1,10 +1,12 @@
-use crate::{archive::FetchTransactionResult, ledger::Ledger, Proposal, Wrapper};
+use std::collections::{HashMap, hash_map::Entry};
+
 use anyhow::{Context, Result};
 use diesel::SqlType;
 use diesel_derive_enum::DbEnum;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use std::collections::{hash_map::Entry, HashMap};
+
+use crate::{Proposal, Wrapper, archive::FetchTransactionResult, ledger::Ledger};
 
 #[derive(SqlType)]
 #[diesel(postgres_type(name = "chain_status_type"))]
@@ -92,8 +94,7 @@ impl Vote {
 
   pub fn match_decoded_mef_memo(&mut self, key: &str) -> Option<String> {
     if let Ok(decoded) = self.decode_memo() {
-      if decoded.to_lowercase() == format!("yes id {}", key) || decoded.to_lowercase() == format!("no id {}", key)
-      {
+      if decoded.to_lowercase() == format!("yes id {}", key) || decoded.to_lowercase() == format!("no id {}", key) {
         return Some(decoded);
       }
     }

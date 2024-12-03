@@ -1,10 +1,12 @@
-use crate::{s3_client, Ocv, ProposalVersion, Vote, Wrapper};
-use anyhow::{anyhow, Result};
+use std::{collections::HashMap, fs, io::Read, path::PathBuf};
+
+use anyhow::{Result, anyhow};
 use flate2::read::GzDecoder;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs, io::Read, path::PathBuf};
 use tar::Archive;
+
+use crate::{Ocv, ProposalVersion, Vote, Wrapper, s3_client};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Ledger(pub Vec<LedgerAccount>);
@@ -120,7 +122,6 @@ impl Ledger {
 
     let balance = account.balance.parse().unwrap_or_else(|_| Decimal::new(0, LEDGER_BALANCE_SCALE));
 
-  
     if account.delegate.clone().unwrap_or(public_key.clone()) != public_key {
       return Ok(Decimal::new(0, LEDGER_BALANCE_SCALE));
     }

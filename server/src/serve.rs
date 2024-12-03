@@ -1,10 +1,9 @@
-use std::sync::Arc;
-use std::collections::HashMap;
-use axum::extract::Query;
+use std::{collections::HashMap, sync::Arc};
+
 use anyhow::Result;
 use axum::{
   Json, Router, debug_handler,
-  extract::{Path, State},
+  extract::{Path, Query, State},
   response::IntoResponse,
   routing::get,
   serve as axum_serve,
@@ -75,7 +74,7 @@ async fn get_proposal_result(ctx: State<Arc<Ocv>>, Path(id): Path<usize>) -> imp
 
 #[debug_handler]
 async fn get_proposal_consideration(
-  ctx: State<Arc<Ocv>>, 
+  ctx: State<Arc<Ocv>>,
   Path((id, start_time, end_time)): Path<(usize, i64, i64)>,
   Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {

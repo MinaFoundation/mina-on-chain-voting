@@ -1,12 +1,13 @@
-use crate::{BlockStatus, ChainStatusType};
 use anyhow::{Context, Result};
 use diesel::{
+  PgConnection, QueryableByName, RunQueryDsl,
   r2d2::ConnectionManager,
   sql_query,
   sql_types::{BigInt, Text},
-  PgConnection, QueryableByName, RunQueryDsl,
 };
 use r2d2::Pool;
+
+use crate::{BlockStatus, ChainStatusType};
 
 #[derive(Clone)]
 pub struct Archive(Pool<ConnectionManager<PgConnection>>);
