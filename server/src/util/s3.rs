@@ -1,8 +1,9 @@
-use aws_sdk_s3::{
-  config::{Builder, Region},
-  Client,
-};
 use std::sync::OnceLock;
+
+use aws_sdk_s3::{
+  Client,
+  config::{Builder, Region},
+};
 
 pub fn s3_client() -> &'static Client {
   static HASHMAP: OnceLock<Client> = OnceLock::new();
