@@ -148,12 +148,12 @@ impl Wrapper<Vec<Vote>> {
     Wrapper(map)
   }
 
-  pub fn process_mep(self, id: impl Into<String>, tip: i64) -> Wrapper<HashMap<String, Vote>> {
+  pub fn process_mep(self, id: usize, tip: i64) -> Wrapper<HashMap<String, Vote>> {
     let mut map = HashMap::new();
-    let id = id.into();
+    let id_str = id.to_string();
 
     for mut vote in self.0 {
-      if let Some(memo) = vote.match_decoded_mef_memo(&id) {
+      if let Some(memo) = vote.match_decoded_mef_memo(&id_str) {
         vote.update_memo(memo);
 
         if tip - vote.height >= 10 {
@@ -192,8 +192,8 @@ impl Wrapper<Vec<Vote>> {
     Wrapper(votes_with_stake)
   }
 
-  pub fn into_weighted_mep(self, id: &usize, ledger: &Ledger, tip: i64) -> Wrapper<Vec<VoteWithWeight>> {
-    let votes = self.process_mep(&id.to_string(), tip);
+  pub fn into_weighted_mep(self, id: usize, ledger: &Ledger, tip: i64) -> Wrapper<Vec<VoteWithWeight>> {
+    let votes = self.process_mep(id, tip);
 
     let votes_with_stake: Vec<VoteWithWeight> = votes
       .0

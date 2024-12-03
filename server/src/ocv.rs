@@ -52,7 +52,7 @@ impl Ocv {
 
       let chain_tip = self.archive.fetch_chain_tip()?;
       let votes = Wrapper(transactions.into_iter().map(std::convert::Into::into).collect())
-      .process_mep(&id.to_string(), chain_tip)
+      .process_mep(id, chain_tip)
       .sort_by_timestamp()
       .to_vec()
       .0;
@@ -70,10 +70,10 @@ impl Ocv {
     let mut total_positive_community_votes = 0;
     let mut total_negative_community_votes = 0;
     for vote in &votes {
-      if vote.memo.to_lowercase() == format!("yes id {}", id.to_string()) {
+      if vote.memo.to_lowercase() == format!("yes id {}", id) {
         total_positive_community_votes += 1;
       }
-      if vote.memo.to_lowercase() == format!("no id {}", id.to_string()) {
+      if vote.memo.to_lowercase() == format!("no id {}", id) {
         total_negative_community_votes += 1;
       }
     }
@@ -114,7 +114,7 @@ impl Ocv {
         };
 
         let votes = Wrapper(transactions.into_iter().map(std::convert::Into::into).collect())
-        .into_weighted_mep(&id, &ledger, chain_tip)
+        .into_weighted_mep(id, &ledger, chain_tip)
         .sort_by_timestamp()
         .0;
 
@@ -123,10 +123,10 @@ impl Ocv {
         votes
       };
       for vote in &votes_weighted {
-        if vote.memo.to_lowercase() == format!("no id {}", id.to_string()) {
+        if vote.memo.to_lowercase() == format!("no id {}", id) {
               negative_stake_weight += vote.weight;
           }
-          if vote.memo.to_lowercase() == format!("yes id {}", id.to_string()) {
+          if vote.memo.to_lowercase() == format!("yes id {}", id) {
               positive_stake_weight += vote.weight;
           }
           positive_stake_weight += vote.weight;

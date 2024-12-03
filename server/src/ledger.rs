@@ -110,7 +110,7 @@ impl Ledger {
 
   pub fn get_stake_weight_mep(
     &self,
-    map: &Wrapper<HashMap<String, Vote>>,
+    _map: &Wrapper<HashMap<String, Vote>>,
     public_key: impl Into<String>,
   ) -> Result<Decimal> {
     let public_key: String = public_key.into();
