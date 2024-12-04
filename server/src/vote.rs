@@ -94,7 +94,7 @@ impl Vote {
 
   pub fn match_decoded_mef_memo(&mut self, key: &str) -> Option<String> {
     if let Ok(decoded) = self.decode_memo() {
-      if decoded.to_lowercase() == format!("yes id {}", key) || decoded.to_lowercase() == format!("no id {}", key) {
+      if decoded.to_lowercase() == format!("yes {}", key) || decoded.to_lowercase() == format!("no {}", key) {
         return Some(decoded);
       }
     }

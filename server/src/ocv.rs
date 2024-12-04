@@ -78,10 +78,10 @@ impl Ocv {
     let mut total_positive_community_votes = 0;
     let mut total_negative_community_votes = 0;
     for vote in &votes {
-      if vote.memo.to_lowercase() == format!("yes id {}", id) {
+      if vote.memo.to_lowercase() == format!("yes {}", id) {
         total_positive_community_votes += 1;
       }
-      if vote.memo.to_lowercase() == format!("no id {}", id) {
+      if vote.memo.to_lowercase() == format!("no {}", id) {
         total_negative_community_votes += 1;
       }
     }
@@ -130,10 +130,10 @@ impl Ocv {
         votes
       };
       for vote in &votes_weighted {
-        if vote.memo.to_lowercase() == format!("no id {}", id) {
+        if vote.memo.to_lowercase() == format!("no {}", id) {
           negative_stake_weight += vote.weight;
         }
-        if vote.memo.to_lowercase() == format!("yes id {}", id) {
+        if vote.memo.to_lowercase() == format!("yes {}", id) {
           positive_stake_weight += vote.weight;
         }
         positive_stake_weight += vote.weight;
