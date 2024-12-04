@@ -72,8 +72,8 @@ contain: 'NO 1'.
 - In the To field, paste your own wallet address.
 - Enter 1 in the Amount field.
 - To cast your vote:
-   - Enter yes # in the Memo field to vote in favor of the proposal.
-   - Enter no # in the Memo field to vote against the proposal.
+   - Enter YES [ID] in the Memo field to vote in favor of the proposal.
+   - Enter NO [ID] in the Memo field to vote against the proposal.
    - Replace # with the actual proposal ID you are voting for.
    - Confirm and submit the transaction. Your vote will be recorded on-chain.
 
