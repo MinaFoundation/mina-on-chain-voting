@@ -60,9 +60,9 @@ specially-constructed memo field. The memo field must adhere to the following co
 **For example:**
 
 ```
-To vote in favor of 'MEF 1', the memo field must be populated with: 'YES ID 1'
+To vote in favor of 'MEF 1', the memo field must be populated with: 'YES 1'
 Similarly, if the intent is to vote against 'MEF 1', the memo field must
-contain: 'NO ID 1'.
+contain: 'NO 1'.
 ```
 
 *Vote With Auro Wallet*
@@ -72,8 +72,8 @@ contain: 'NO ID 1'.
 - In the To field, paste your own wallet address.
 - Enter 1 in the Amount field.
 - To cast your vote:
-   - Enter YES ID # in the Memo field to vote in favor of the proposal.
-   - Enter NO ID # in the Memo field to vote against the proposal.
+   - Enter yes # in the Memo field to vote in favor of the proposal.
+   - Enter no # in the Memo field to vote against the proposal.
    - Replace # with the actual proposal ID you are voting for.
    - Confirm and submit the transaction. Your vote will be recorded on-chain.
 
