@@ -1,10 +1,12 @@
-use crate::{Archive, Caches, Ocv, Proposal, ProposalsManifest};
+use std::{fs, path::PathBuf, str::FromStr};
+
 use anyhow::Result;
 use bytes::Bytes;
 use clap::{Args, Parser, ValueEnum};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
-use std::{fs, path::PathBuf, str::FromStr};
+
+use crate::{Archive, Caches, Ocv, Proposal, ProposalsManifest};
 
 #[derive(Clone, Args)]
 pub struct OcvConfig {

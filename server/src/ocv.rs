@@ -1,8 +1,10 @@
-use crate::{util::Caches, Archive, Ledger, Network, Proposal, Vote, VoteWithWeight, Wrapper};
-use anyhow::{anyhow, Result};
+use std::{path::PathBuf, sync::Arc};
+
+use anyhow::{Result, anyhow};
 use rust_decimal::Decimal;
 use serde::Serialize;
-use std::{path::PathBuf, sync::Arc};
+
+use crate::{Archive, Ledger, Network, Proposal, Vote, VoteWithWeight, Wrapper, util::Caches};
 
 #[derive(Clone)]
 pub struct Ocv {
@@ -41,6 +43,120 @@ impl Ocv {
     self.caches.votes.insert(proposal.key.clone(), Arc::new(votes.clone())).await;
 
     Ok(ProposalResponse { proposal, votes })
+  }
+
+  pub async fn proposal_consideration(
+    &self,
+    id: usize,
+    start_time: i64,
+    end_time: i64,
+    ledger_hash: Option<String>,
+  ) -> Result<GetMinaProposalConsiderationResponse> {
+    let proposal_key = "MEF".to_string() + &id.to_string();
+    let votes = if let Some(cached_votes) = self.caches.votes.get(&proposal_key).await {
+      cached_votes.to_vec()
+    } else {
+      let transactions = self.archive.fetch_transactions(start_time, end_time)?;
+
+      let chain_tip = self.archive.fetch_chain_tip()?;
+      let votes = Wrapper(transactions.into_iter().map(std::convert::Into::into).collect())
+        .process_mep(id, chain_tip)
+        .sort_by_timestamp()
+        .to_vec()
+        .0;
+
+      self.caches.votes.insert(proposal_key.clone(), Arc::new(votes.clone())).await;
+      tracing::info!("votes {}", votes.len());
+      votes
+    };
+
+    // weighted votes
+    let mut positive_stake_weight = Decimal::from(0);
+    let mut negative_stake_weight = Decimal::from(0);
+
+    // check community votes
+    let mut total_positive_community_votes = 0;
+    let mut total_negative_community_votes = 0;
+    for vote in &votes {
+      if vote.memo.to_lowercase() == format!("yes {}", id) {
+        total_positive_community_votes += 1;
+      }
+      if vote.memo.to_lowercase() == format!("no {}", id) {
+        total_negative_community_votes += 1;
+      }
+    }
+    // Check if enough positive votes
+    if total_positive_community_votes < 10 {
+      return Ok(GetMinaProposalConsiderationResponse {
+        proposal_id: id,
+        total_community_votes: votes.len(),
+        total_positive_community_votes,
+        total_negative_community_votes,
+        total_stake_weight: Decimal::ZERO,
+        positive_stake_weight: Decimal::ZERO,
+        negative_stake_weight: Decimal::ZERO,
+        votes,
+        elegible: false,
+        vote_status: "Insufficient voters".to_string(),
+      });
+    }
+
+    // Calculate weighted votes if ledger_hash params is provided
+    if let Some(hash) = ledger_hash {
+      let votes_weighted = if let Some(cached_votes) = self.caches.votes_weighted.get(&proposal_key).await {
+        cached_votes.to_vec()
+      } else {
+        let transactions = self.archive.fetch_transactions(start_time, end_time)?;
+
+        let chain_tip = self.archive.fetch_chain_tip()?;
+
+        let ledger = if let Some(cached_ledger) = self.caches.ledger.get(&hash).await {
+          Ledger(cached_ledger.to_vec())
+        } else {
+          let ledger = Ledger::fetch(self, &hash).await?;
+
+          self.caches.ledger.insert(hash, Arc::new(ledger.0.clone())).await;
+
+          ledger
+        };
+
+        let votes = Wrapper(transactions.into_iter().map(std::convert::Into::into).collect())
+          .into_weighted_mep(id, &ledger, chain_tip)
+          .sort_by_timestamp()
+          .0;
+
+        self.caches.votes_weighted.insert(proposal_key.clone(), Arc::new(votes.clone())).await;
+
+        votes
+      };
+      for vote in &votes_weighted {
+        if vote.memo.to_lowercase() == format!("no {}", id) {
+          negative_stake_weight += vote.weight;
+        }
+        if vote.memo.to_lowercase() == format!("yes {}", id) {
+          positive_stake_weight += vote.weight;
+        }
+        positive_stake_weight += vote.weight;
+      }
+    } else {
+      tracing::info!("ledger_hash is not provided.");
+    }
+
+    let total_stake_weight = positive_stake_weight + negative_stake_weight;
+
+    // Voting results
+    Ok(GetMinaProposalConsiderationResponse {
+      proposal_id: id,
+      total_community_votes: votes.len(),
+      total_positive_community_votes,
+      total_negative_community_votes,
+      total_stake_weight,
+      positive_stake_weight,
+      negative_stake_weight,
+      votes,
+      elegible: true,
+      vote_status: "Proposal selected for the next phase".to_string(),
+    })
   }
 
   pub async fn proposal_result(&self, id: usize) -> Result<GetMinaProposalResultResponse> {
@@ -131,4 +247,18 @@ pub struct GetMinaProposalResultResponse {
   positive_stake_weight: Decimal,
   negative_stake_weight: Decimal,
   votes: Vec<VoteWithWeight>,
+}
+
+#[derive(Serialize)]
+pub struct GetMinaProposalConsiderationResponse {
+  proposal_id: usize,
+  total_community_votes: usize,
+  total_positive_community_votes: usize,
+  total_negative_community_votes: usize,
+  total_stake_weight: Decimal,
+  positive_stake_weight: Decimal,
+  negative_stake_weight: Decimal,
+  votes: Vec<Vote>,
+  vote_status: String,
+  elegible: bool,
 }
