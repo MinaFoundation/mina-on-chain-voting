@@ -69,7 +69,6 @@ impl Ocv {
       tracing::info!("votes {}", votes.len());
       votes
     };
-
     // weighted votes
     let mut positive_stake_weight = Decimal::from(0);
     let mut negative_stake_weight = Decimal::from(0);
@@ -95,7 +94,7 @@ impl Ocv {
         total_stake_weight: Decimal::ZERO,
         positive_stake_weight: Decimal::ZERO,
         negative_stake_weight: Decimal::ZERO,
-        votes,
+        // votes,
         elegible: false,
         vote_status: "Insufficient voters".to_string(),
       });
@@ -153,7 +152,7 @@ impl Ocv {
       total_stake_weight,
       positive_stake_weight,
       negative_stake_weight,
-      votes,
+      // votes,
       elegible: true,
       vote_status: "Proposal selected for the next phase".to_string(),
     })
@@ -258,7 +257,7 @@ pub struct GetMinaProposalConsiderationResponse {
   total_stake_weight: Decimal,
   positive_stake_weight: Decimal,
   negative_stake_weight: Decimal,
-  votes: Vec<Vote>,
+  // votes: Vec<Vote>, // avoid compromising voter anonymity.
   vote_status: String,
-  elegible: bool,
+  elegible: bool
 }
