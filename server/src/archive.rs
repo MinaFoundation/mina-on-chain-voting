@@ -85,3 +85,79 @@ pub struct FetchTransactionResult {
   #[diesel(sql_type = BigInt)]
   pub nonce: i64,
 }
+
+pub trait ArchiveInterface {
+  fn fetch_chain_tip(&self) -> Result<i64>;
+  fn fetch_latest_slot(&self) -> Result<i64>;
+  fn fetch_transactions(&self, start_time: i64, end_time: i64) -> Result<Vec<FetchTransactionResult>>;
+}
+
+
+impl ArchiveInterface for Archive {
+  fn fetch_chain_tip(&self) -> Result<i64> {
+      self.fetch_chain_tip()
+  }
+
+  fn fetch_latest_slot(&self) -> Result<i64> {
+      self.fetch_latest_slot()
+  }
+
+  fn fetch_transactions(&self, start_time: i64, end_time: i64) -> Result<Vec<FetchTransactionResult>> {
+      self.fetch_transactions(start_time, end_time)
+  }
+}
+
+
+pub struct MockArchive;
+
+impl ArchiveInterface for MockArchive {
+    fn fetch_chain_tip(&self) -> Result<i64> {
+        Ok(100) // Return a mock value for the chain tip
+    }
+
+    fn fetch_latest_slot(&self) -> Result<i64> {
+        Ok(200) // Return a mock value for the latest slot
+    }
+
+    fn fetch_transactions(&self, start_time: i64, end_time: i64) -> Result<Vec<FetchTransactionResult>> {
+        Ok(vec![
+            FetchTransactionResult {
+                account: "mock_account".to_string(),
+                hash: "mock_hash".to_string(),
+                memo: "mock_memo".to_string(),
+                height: 1,
+                status: BlockStatus::Pending, // Use a mock value
+                timestamp: start_time + 1000,
+                nonce: 42,
+            },
+        ]) // Return a mock list of transactions
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_fetch_chain_tip() {
+        let archive = MockArchive;
+        let chain_tip = archive.fetch_chain_tip().unwrap();
+        assert_eq!(chain_tip, 100);
+    }
+
+    #[test]
+    fn test_fetch_latest_slot() {
+        let archive = MockArchive;
+        let latest_slot = archive.fetch_latest_slot().unwrap();
+        assert_eq!(latest_slot, 200);
+    }
+
+    #[test]
+    fn test_fetch_transactions() {
+        let archive = MockArchive;
+        let transactions = archive.fetch_transactions(1733371364000, 1733803364000).unwrap();
+        assert_eq!(transactions.len(), 1);
+        assert_eq!(transactions[0].account, "mock_account");
+    }
+}
