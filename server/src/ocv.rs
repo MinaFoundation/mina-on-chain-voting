@@ -4,13 +4,14 @@ use anyhow::{Result, anyhow};
 use rust_decimal::Decimal;
 use serde::Serialize;
 
-use crate::{Archive, Ledger, Network, Proposal, Vote, VoteWithWeight, Wrapper, util::Caches};
+use crate::{Archive, Ledger, Network, Proposal, ReleaseStage, Vote, VoteWithWeight, Wrapper, util::Caches};
 
 #[derive(Clone)]
 pub struct Ocv {
   pub caches: Caches,
   pub archive: Archive,
   pub network: Network,
+  pub release_stage: ReleaseStage,
   pub ledger_storage_path: PathBuf,
   pub bucket_name: String,
   pub proposals: Vec<Proposal>,
@@ -43,6 +44,27 @@ impl Ocv {
     self.caches.votes.insert(proposal.key.clone(), Arc::new(votes.clone())).await;
 
     Ok(ProposalResponse { proposal, votes })
+  }
+
+  /**
+  * Checks whether the positive community vote threshold has been met based on the release stage.
+  *
+  * @param {number} total_positive_community_votes - Total number of positive votes from the community.
+  * @param {number} total_negative_community_votes - Total number of negative votes from the community.
+  * @returns {boolean} - Returns `true` if the positive votes meet the threshold for the current release stage, otherwise `false`.
+  *
+  * @description
+  * - For the `Production` release stage, the minimum threshold for positive votes is 10.
+  * - For other release stages, the threshold is 2.
+  */
+  pub  fn has_met_vote_threshold(&self, total_positive_community_votes: usize, total_negative_community_votes: usize) -> bool {
+    let min_positive_votes = if self.release_stage == ReleaseStage::Production {10} else {2};
+    tracing::info!("min_positive_votes {}", min_positive_votes);
+    tracing::info!("release_stage {}", self.release_stage);
+    if total_positive_community_votes >= min_positive_votes {
+      return true;
+    }
+    false
   }
 
   pub async fn proposal_consideration(
@@ -85,7 +107,7 @@ impl Ocv {
       }
     }
     // Check if enough positive votes
-    if total_positive_community_votes < 10 {
+    if !self.has_met_vote_threshold(total_positive_community_votes, total_negative_community_votes) {
       return Ok(GetMinaProposalConsiderationResponse {
         proposal_id: id,
         total_community_votes: votes.len(),
