@@ -13,6 +13,9 @@ pub struct OcvConfig {
   /// The mina network to connect to.
   #[clap(long, env)]
   pub network: Network,
+   /// The environment stage.
+   #[clap(long, env = "RELEASE_STAGE")]
+  pub release_stage: ReleaseStage,
   /// The URL from which the `proposals.json` should be fetched.
   #[clap(long, env = "PROPOSALS_URL")]
   pub maybe_proposals_url: Option<String>,
@@ -34,6 +37,7 @@ impl OcvConfig {
       caches: Caches::build(),
       archive: Archive::new(&self.archive_database_url),
       network: self.network,
+      release_stage: self.release_stage,
       ledger_storage_path: PathBuf::from_str(&self.ledger_storage_path)?,
       bucket_name: self.bucket_name.clone(),
       proposals: self.load_proposals().await?,
@@ -67,4 +71,15 @@ pub enum Network {
   Devnet,
   #[display("berkeley")]
   Berkeley,
+}
+
+#[derive(Clone, Copy, Parser, ValueEnum, Debug, Display, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum ReleaseStage {
+  #[display("development")]
+  Development,
+  #[display("staging")]
+  Staging,
+  #[display("production")]
+  Production,
 }
