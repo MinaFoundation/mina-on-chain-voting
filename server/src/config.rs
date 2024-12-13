@@ -13,8 +13,8 @@ pub struct OcvConfig {
   /// The mina network to connect to.
   #[clap(long, env)]
   pub network: Network,
-   /// The environment stage.
-   #[clap(long, env = "RELEASE_STAGE")]
+  /// The environment stage.
+  #[clap(long, env = "RELEASE_STAGE")]
   pub release_stage: ReleaseStage,
   /// The URL from which the `proposals.json` should be fetched.
   #[clap(long, env = "PROPOSALS_URL")]
