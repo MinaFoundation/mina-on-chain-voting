@@ -281,5 +281,5 @@ pub struct GetMinaProposalConsiderationResponse {
   negative_stake_weight: Decimal,
   // votes: Vec<Vote>, // avoid compromising voter anonymity.
   vote_status: String,
-  elegible: bool
+  elegible: bool,
 }
