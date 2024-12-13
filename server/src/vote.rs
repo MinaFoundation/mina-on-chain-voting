@@ -302,7 +302,6 @@ mod tests {
       Vote::new("2", "4", "E4YiC7vB4DC9JoQvaj83nBWwHC3gJh4G9EBef7xh4ti4idBAgZai7", 120, BlockStatus::Pending, 120, 2),
     ]
   }
-  
 
   #[test]
   fn test_decode_mep_memo() {
@@ -346,9 +345,8 @@ mod tests {
     assert_eq!(v8_decoded, "YES 1");
     assert_eq!(v9_decoded, "YES 1");
     assert_eq!(v10_decoded, "NO 1");
-
   }
-  
+
   #[test]
   fn test_process_mep_votes() {
     let votes = get_test_mep_votes();
@@ -377,17 +375,105 @@ mod tests {
 
   fn get_test_mep_votes() -> Vec<Vote> {
     vec![
-      Vote::new("1", "1", "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x", 331718, BlockStatus::Canonical, 1730897878000, 1),
-      Vote::new("2", "2", "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x", 341719, BlockStatus::Pending, 1730897878000, 2),
-      Vote::new("3", "3", "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x", 351320, BlockStatus::Pending, 1730897878000, 3),
-      Vote::new("4", "4", "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x", 352721, BlockStatus::Pending, 1730897878000, 4),
-      Vote::new("5", "5", "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x", 353722, BlockStatus::Pending, 1730897878000, 5),
-      Vote::new("6", "6", "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x", 354723, BlockStatus::Pending, 1730897878000, 6),
-      Vote::new("7", "7", "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x", 355724, BlockStatus::Pending, 1730897878000, 7),
-      Vote::new("8", "8", "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x", 356725, BlockStatus::Pending, 1730897878000, 8),
-      Vote::new("9", "9", "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x", 357726, BlockStatus::Pending, 1730897878000, 9),
-      Vote::new("10", "10", "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x", 358727, BlockStatus::Pending, 1730897878000, 10),
-      Vote::new("11", "11", "E4YVQPTeHZGie6hAZbLSCbuj5UuhfWsCxnLbUgBPqGJgdi8XX9CNP", 358728, BlockStatus::Pending, 1730897878000, 11),
+      Vote::new(
+        "1",
+        "1",
+        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        331718,
+        BlockStatus::Canonical,
+        1730897878000,
+        1,
+      ),
+      Vote::new(
+        "2",
+        "2",
+        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        341719,
+        BlockStatus::Pending,
+        1730897878000,
+        2,
+      ),
+      Vote::new(
+        "3",
+        "3",
+        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        351320,
+        BlockStatus::Pending,
+        1730897878000,
+        3,
+      ),
+      Vote::new(
+        "4",
+        "4",
+        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        352721,
+        BlockStatus::Pending,
+        1730897878000,
+        4,
+      ),
+      Vote::new(
+        "5",
+        "5",
+        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        353722,
+        BlockStatus::Pending,
+        1730897878000,
+        5,
+      ),
+      Vote::new(
+        "6",
+        "6",
+        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        354723,
+        BlockStatus::Pending,
+        1730897878000,
+        6,
+      ),
+      Vote::new(
+        "7",
+        "7",
+        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        355724,
+        BlockStatus::Pending,
+        1730897878000,
+        7,
+      ),
+      Vote::new(
+        "8",
+        "8",
+        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        356725,
+        BlockStatus::Pending,
+        1730897878000,
+        8,
+      ),
+      Vote::new(
+        "9",
+        "9",
+        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        357726,
+        BlockStatus::Pending,
+        1730897878000,
+        9,
+      ),
+      Vote::new(
+        "10",
+        "10",
+        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        358727,
+        BlockStatus::Pending,
+        1730897878000,
+        10,
+      ),
+      Vote::new(
+        "11",
+        "11",
+        "E4YVQPTeHZGie6hAZbLSCbuj5UuhfWsCxnLbUgBPqGJgdi8XX9CNP",
+        358728,
+        BlockStatus::Pending,
+        1730897878000,
+        11,
+      ),
     ]
   }
 }
