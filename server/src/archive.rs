@@ -117,7 +117,7 @@ impl ArchiveInterface for MockArchive {
     Ok(200) // Return a mock value for the latest slot
   }
 
-  fn fetch_transactions(&self, start_time: i64, end_time: i64) -> Result<Vec<FetchTransactionResult>> {
+  fn fetch_transactions(&self, start_time: i64, _end_time: i64) -> Result<Vec<FetchTransactionResult>> {
     Ok(vec![FetchTransactionResult {
       account: "mock_account".to_string(),
       hash: "mock_hash".to_string(),

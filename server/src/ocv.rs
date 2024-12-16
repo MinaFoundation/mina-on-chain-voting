@@ -46,34 +46,32 @@ impl Ocv {
     Ok(ProposalResponse { proposal, votes })
   }
 
-  /**
-   * Checks whether the positive community vote threshold has been met based
-   * on the release stage.
-   *
-   * @param {number} total_positive_community_votes - Total number of
-   * positive votes from the community. @param {number}
-   * total_negative_community_votes - Total number of negative votes from
-   * the community. @returns {boolean} - Returns `true` if the positive
-   * votes meet the threshold for the current release stage, otherwise
-   * `false`.
-   *
-   * @description
-   * - For the `Production` release stage, the minimum threshold for
-   *   positive votes is 10.
-   * - For other release stages, the threshold is 2.
-   */
+  /// Checks whether the positive community vote threshold has been met based
+  /// on the release stage.
+  ///
+  /// # Arguments
+  ///
+  /// * `total_positive_community_votes` - Total number of positive votes from the community.
+  /// * `total_negative_community_votes` - Total number of negative votes from the community.
+  ///
+  /// # Returns
+  ///
+  /// Returns `true` if the positive votes meet the threshold for the current release stage,
+  /// otherwise `false`.
+  ///
+  /// # Description
+  ///
+  /// - For the `Production` release stage, the minimum threshold for positive votes is 10.
+  /// - For other release stages, the threshold is 2.
   pub fn has_met_vote_threshold(
     &self,
     total_positive_community_votes: usize,
-    total_negative_community_votes: usize,
+    _total_negative_community_votes: usize,
   ) -> bool {
     let min_positive_votes = if self.release_stage == ReleaseStage::Production { 10 } else { 2 };
     tracing::info!("min_positive_votes {}", min_positive_votes);
     tracing::info!("release_stage {}", self.release_stage);
-    if total_positive_community_votes >= min_positive_votes {
-      return true;
-    }
-    false
+    total_positive_community_votes >= min_positive_votes
   }
 
   pub async fn proposal_consideration(
@@ -125,7 +123,6 @@ impl Ocv {
         total_stake_weight: Decimal::ZERO,
         positive_stake_weight: Decimal::ZERO,
         negative_stake_weight: Decimal::ZERO,
-        // votes,
         elegible: false,
         vote_status: "Insufficient voters".to_string(),
       });
@@ -183,7 +180,6 @@ impl Ocv {
       total_stake_weight,
       positive_stake_weight,
       negative_stake_weight,
-      // votes,
       elegible: true,
       vote_status: "Proposal selected for the next phase".to_string(),
     })
@@ -288,7 +284,6 @@ pub struct GetMinaProposalConsiderationResponse {
   total_stake_weight: Decimal,
   positive_stake_weight: Decimal,
   negative_stake_weight: Decimal,
-  // votes: Vec<Vote>, // avoid compromising voter anonymity.
   vote_status: String,
   elegible: bool,
 }
