@@ -125,6 +125,7 @@ impl Ocv {
         negative_stake_weight: Decimal::ZERO,
         elegible: false,
         vote_status: "Insufficient voters".to_string(),
+        votes,
       });
     }
 
@@ -182,6 +183,7 @@ impl Ocv {
       negative_stake_weight,
       elegible: true,
       vote_status: "Proposal selected for the next phase".to_string(),
+      votes,
     })
   }
 
@@ -286,4 +288,5 @@ pub struct GetMinaProposalConsiderationResponse {
   negative_stake_weight: Decimal,
   vote_status: String,
   elegible: bool,
+  votes: Vec<Vote>,
 }
