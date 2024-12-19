@@ -1,0 +1,51 @@
+---
+name: PR checks for rust server backend
+
+on:
+  pull_request:
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  changed-files:
+    name: Check changes for rust server app
+    runs-on: minafoundation-default-interruptible-runners
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v39
+        id: changed
+        with:
+          files_yaml: |
+            server:
+              - 'server/**'
+          write_output_files: true
+    outputs:
+      modified_keys: ${{ steps.changed.outputs.modified_keys }}
+  rust-checks:
+    env:
+      CARGO_TERM_COLOR: always
+    needs: changed-files
+    if: needs.changed-files.outputs.modified_keys != '[]' && needs.changed-files.outputs.modified_keys != ''
+    name: Rust PR Checks
+    runs-on: minafoundation-default-interruptible-runners
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ./server
+      - name: ✍️ Check formatting
+        run: cargo fmt --all -- --check
+        working-directory: ./server
+      - name: 🧐 Check linting
+        run: cargo clippy -- -D warnings -D clippy::unwrap_used
+        working-directory: ./server
+      - name: 🏗️ Build the app
+        run: cargo build --release
+        working-directory: ./server
+      - name: 📋 Run the tests
+        run: cargo test --locked --all-features --all-targets
+        working-directory: ./server

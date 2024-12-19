@@ -39,5 +39,31 @@ RUN cargo install diesel_cli --no-default-features --features postgres
 COPY --chown=mina:mina . .
 RUN cargo build --release
 
+FROM debian:bullseye-slim
+RUN apt-get update && \
+    apt-get install -y \
+    curl \
+    libpq5 \
+    libffi7 \
+    libgmp10 \
+    libkrb5-3 \
+    libidn2-0 \
+    libsasl2-2 \
+    libtasn1-6 \
+    libnettle8 \
+    libcom-err2 \
+    libgnutls30 \
+    libp11-kit0 \
+    libhogweed6 \
+    libk5crypto3 \
+    libkeyutils1 \
+    libldap-2.4-2 \
+    libunistring2 \
+    libkrb5support0 \
+    libgssapi-krb5-2 \
+    postgresql-client \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /app/target/release/mina_ocv /app
 # start the server
-CMD ["./target/release/mina_ocv"]
+CMD ["./mina_ocv"]
