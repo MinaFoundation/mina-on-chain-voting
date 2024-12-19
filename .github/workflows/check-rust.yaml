@@ -3,7 +3,6 @@ name: PR checks for rust server backend
 
 on:
   pull_request:
-  push:
 
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.head_ref || github.ref }}'
@@ -26,20 +25,18 @@ jobs:
     outputs:
       modified_keys: ${{ steps.changed.outputs.modified_keys }}
   rust-checks:
+    env:
+      CARGO_TERM_COLOR: always
     needs: changed-files
     if: needs.changed-files.outputs.modified_keys != '[]' && needs.changed-files.outputs.modified_keys != ''
     name: Rust PR Checks
     runs-on: minafoundation-default-interruptible-runners
-    strategy:
-      matrix:
-        # In case in the future we want to add beta/nightly
-        toolchain: [stable]
     steps:
       - uses: actions/checkout@v4
-      - name: Install ${{ matrix.toolchain }}
-        uses: dtolnay/rust-toolchain@master
+      - run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
         with:
-          toolchain: ${{ matrix.toolchain }}
+          workspaces: ./server
       - name: ✍️ Check formatting
         run: cargo fmt --all -- --check
         working-directory: ./server
