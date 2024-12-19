@@ -1,0 +1,54 @@
+---
+name: PR checks for rust server backend
+
+on:
+  pull_request:
+  push:
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  changed-files:
+    name: Check changes for rust server app
+    runs-on: minafoundation-default-interruptible-runners
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v39
+        id: changed
+        with:
+          files_yaml: |
+            server:
+              - 'server/**'
+          write_output_files: true
+    outputs:
+      modified_keys: ${{ steps.changed.outputs.modified_keys }}
+  rust-checks:
+    needs: changed-files
+    if: needs.changed-files.outputs.modified_keys != '[]' && needs.changed-files.outputs.modified_keys != ''
+    name: Rust PR Checks
+    runs-on: minafoundation-default-interruptible-runners
+    strategy:
+      matrix:
+        # In case in the future we want to add beta/nightly
+        toolchain: [stable]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ${{ matrix.toolchain }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - name: ✍️ Check formatting
+        run: cargo fmt --all -- --check
+        working-directory: ./server
+      - name: 🧐 Check linting
+        run: cargo clippy -- -D warnings -D clippy::unwrap_used
+        working-directory: ./server
+      - name: 🏗️ Build the app
+        run: cargo build --release
+        working-directory: ./server
+      - name: 📋 Run the tests
+        run: cargo test --locked --all-features --all-targets
+        working-directory: ./server
