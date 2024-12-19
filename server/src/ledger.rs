@@ -1,12 +1,12 @@
 use std::{collections::HashMap, fs, io::Read, path::PathBuf};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use flate2::read::GzDecoder;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use tar::Archive;
 
-use crate::{s3_client, Ocv, ProposalVersion, Vote, Wrapper};
+use crate::{Ocv, ProposalVersion, Vote, Wrapper, s3_client};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Ledger(pub Vec<LedgerAccount>);

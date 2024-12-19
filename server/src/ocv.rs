@@ -51,17 +51,20 @@ impl Ocv {
   ///
   /// # Arguments
   ///
-  /// * `total_positive_community_votes` - Total number of positive votes from the community.
-  /// * `total_negative_community_votes` - Total number of negative votes from the community.
+  /// * `total_positive_community_votes` - Total number of positive votes from
+  ///   the community.
+  /// * `total_negative_community_votes` - Total number of negative votes from
+  ///   the community.
   ///
   /// # Returns
   ///
-  /// Returns `true` if the positive votes meet the threshold for the current release stage,
-  /// otherwise `false`.
+  /// Returns `true` if the positive votes meet the threshold for the current
+  /// release stage, otherwise `false`.
   ///
   /// # Description
   ///
-  /// - For the `Production` release stage, the minimum threshold for positive votes is 10.
+  /// - For the `Production` release stage, the minimum threshold for positive
+  ///   votes is 10.
   /// - For other release stages, the threshold is 2.
   pub fn has_met_vote_threshold(
     &self,
