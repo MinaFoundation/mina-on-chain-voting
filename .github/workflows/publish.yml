@@ -21,7 +21,7 @@ jobs:
     runs-on: minafoundation-default-runners
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🦀 Get on-chain-voting server version from Cargo.toml.
         id: ocv-server
         uses: dante-signal31/rust-app-version@v1.2.0
@@ -56,8 +56,8 @@ jobs:
     runs-on: minafoundation-default-runners
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v3
-      - name: 🦀 Get on-chain-voting web version from package.json
+        uses: actions/checkout@v4
+      - name: 🇹🇸 Get on-chain-voting web version from package.json
         id: ocv-web
         uses: martinbeentjes/npm-get-version-action@v1.3.1
         with:
