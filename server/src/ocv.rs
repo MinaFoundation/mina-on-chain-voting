@@ -79,12 +79,13 @@ impl Ocv {
 
   pub async fn proposal_consideration(
     &self,
-    id: usize,
+    round_id: usize,
+    proposal_id: usize,
     start_time: i64,
     end_time: i64,
     ledger_hash: Option<String>,
   ) -> Result<GetMinaProposalConsiderationResponse> {
-    let proposal_key = "MEF".to_string() + &id.to_string();
+    let proposal_key = "MEF".to_string() + &round_id.to_string();
     let votes = if let Some(cached_votes) = self.caches.votes.get(&proposal_key).await {
       cached_votes.to_vec()
     } else {
@@ -92,7 +93,7 @@ impl Ocv {
 
       let chain_tip = self.archive.fetch_chain_tip()?;
       let votes = Wrapper(transactions.into_iter().map(std::convert::Into::into).collect())
-        .process_mep(id, chain_tip)
+        .process_mep(round_id, proposal_id, chain_tip)
         .sort_by_timestamp()
         .to_vec()
         .0;
@@ -109,17 +110,18 @@ impl Ocv {
     let mut total_positive_community_votes = 0;
     let mut total_negative_community_votes = 0;
     for vote in &votes {
-      if vote.memo.to_lowercase() == format!("yes {}", id) {
+      if vote.memo.to_lowercase() == format!("mef{} yes {}", round_id, proposal_id) {
         total_positive_community_votes += 1;
       }
-      if vote.memo.to_lowercase() == format!("no {}", id) {
+      if vote.memo.to_lowercase() == format!("mef{} no {}", round_id, proposal_id) {
         total_negative_community_votes += 1;
       }
     }
     // Check if enough positive votes
     if !self.has_met_vote_threshold(total_positive_community_votes, total_negative_community_votes) {
       return Ok(GetMinaProposalConsiderationResponse {
-        proposal_id: id,
+        round_id,
+        proposal_id,
         total_community_votes: votes.len(),
         total_positive_community_votes,
         total_negative_community_votes,
@@ -152,7 +154,7 @@ impl Ocv {
         };
 
         let votes = Wrapper(transactions.into_iter().map(std::convert::Into::into).collect())
-          .into_weighted_mep(id, &ledger, chain_tip)
+          .into_weighted_mep(round_id, proposal_id, &ledger, chain_tip)
           .sort_by_timestamp()
           .0;
 
@@ -161,10 +163,10 @@ impl Ocv {
         votes
       };
       for vote in &votes_weighted {
-        if vote.memo.to_lowercase() == format!("no {}", id) {
+        if vote.memo.to_lowercase() == format!("mef {} no {}", round_id, proposal_id) {
           negative_stake_weight += vote.weight;
         }
-        if vote.memo.to_lowercase() == format!("yes {}", id) {
+        if vote.memo.to_lowercase() == format!("mef {} yes {}", round_id, proposal_id) {
           positive_stake_weight += vote.weight;
         }
         positive_stake_weight += vote.weight;
@@ -177,7 +179,8 @@ impl Ocv {
 
     // Voting results
     Ok(GetMinaProposalConsiderationResponse {
-      proposal_id: id,
+      round_id,
+      proposal_id,
       total_community_votes: votes.len(),
       total_positive_community_votes,
       total_negative_community_votes,
@@ -282,6 +285,7 @@ pub struct GetMinaProposalResultResponse {
 
 #[derive(Serialize)]
 pub struct GetMinaProposalConsiderationResponse {
+  round_id: usize,
   proposal_id: usize,
   total_community_votes: usize,
   total_positive_community_votes: usize,
