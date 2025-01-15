@@ -92,9 +92,11 @@ impl Vote {
     None
   }
 
-  pub fn match_decoded_mef_memo(&mut self, key: &str) -> Option<String> {
+  pub fn match_decoded_mef_memo(&mut self, round_id: &str, proposal_id: &str) -> Option<String> {
     if let Ok(decoded) = self.decode_memo() {
-      if decoded.to_lowercase() == format!("yes {}", key) || decoded.to_lowercase() == format!("no {}", key) {
+      if decoded.to_lowercase() == format!("mef{} yes {}", round_id, proposal_id)
+        || decoded.to_lowercase() == format!("mef{} no {}", round_id, proposal_id)
+      {
         return Some(decoded);
       }
     }
@@ -207,12 +209,13 @@ impl Wrapper<Vec<Vote>> {
       Wrapper(map)
   }
 
-  pub fn process_mep(self, id: usize, tip: i64) -> Wrapper<HashMap<String, Vote>> {
+  pub fn process_mep(self, round_id: usize, proposal_id: usize, tip: i64) -> Wrapper<HashMap<String, Vote>> {
     let mut map = HashMap::new();
-    let id_str = id.to_string();
+    let proposal_id_str = proposal_id.to_string();
+    let round_id_str = round_id.to_string();
 
     for mut vote in self.0 {
-      if let Some(memo) = vote.match_decoded_mef_memo(&id_str) {
+      if let Some(memo) = vote.match_decoded_mef_memo(&round_id_str, &proposal_id_str) {
         vote.update_memo(memo);
 
         if tip - vote.height >= 10 {
@@ -251,8 +254,14 @@ impl Wrapper<Vec<Vote>> {
     Wrapper(votes_with_stake)
   }
 
-  pub fn into_weighted_mep(self, id: usize, ledger: &Ledger, tip: i64) -> Wrapper<Vec<VoteWithWeight>> {
-    let votes = self.process_mep(id, tip);
+  pub fn into_weighted_mep(
+    self,
+    round_id: usize,
+    proposal_id: usize,
+    ledger: &Ledger,
+    tip: i64,
+  ) -> Wrapper<Vec<VoteWithWeight>> {
+    let votes = self.process_mep(round_id, proposal_id, tip);
 
     let votes_with_stake: Vec<VoteWithWeight> = votes
       .0
@@ -369,47 +378,48 @@ mod tests {
     vote.update_memo("E4Yd67s51QN9DZVDy8JKPEoNGykMsYQ5KRiKpZHiLZTjA8dB9SnFT");
     assert_eq!(vote.decode_memo().unwrap(), "BeepBoop");
 
-    vote.update_memo("E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x");
-    assert_eq!(vote.decode_memo().unwrap(), "YES 1");
+    vote.update_memo("E4Yh4PzVLrCiugdoaASo5Ve6Do755ey6vGqkURC8z7qcADqMUcp9K");
+    assert_eq!(vote.decode_memo().unwrap(), "MEF1 YES 1");
 
-    vote.update_memo("E4YVQPTeHZGie6hAZbLSCbuj5UuhfWsCxnLbUgBPqGJgdi8XX9CNP");
-    assert_eq!(vote.decode_memo().unwrap(), "NO 1");
+    vote.update_memo("E4Yf7epFtpM8YAsxcGVagQQKmtUpwj8nKTWMQnWbXyhg7hE6ceJhJ");
+    assert_eq!(vote.decode_memo().unwrap(), "MEF1 NO 1");
   }
 
   #[test]
   fn test_match_decode_mep_memo() {
-    let key = "1";
+    let round_id = "1";
+    let proposal_id = "1";
     let mut votes = get_test_mep_votes();
 
-    let v0_decoded = votes[0].match_decoded_mef_memo(key).unwrap();
-    let v1_decoded = votes[1].match_decoded_mef_memo(key).unwrap();
-    let v2_decoded = votes[2].match_decoded_mef_memo(key).unwrap();
-    let v3_decoded = votes[3].match_decoded_mef_memo(key).unwrap();
-    let v4_decoded = votes[4].match_decoded_mef_memo(key).unwrap();
-    let v5_decoded = votes[5].match_decoded_mef_memo(key).unwrap();
-    let v6_decoded = votes[6].match_decoded_mef_memo(key).unwrap();
-    let v7_decoded = votes[7].match_decoded_mef_memo(key).unwrap();
-    let v8_decoded = votes[8].match_decoded_mef_memo(key).unwrap();
-    let v9_decoded = votes[9].match_decoded_mef_memo(key).unwrap();
-    let v10_decoded = votes[10].match_decoded_mef_memo(key).unwrap();
+    let v0_decoded = votes[0].match_decoded_mef_memo(round_id, proposal_id).unwrap();
+    let v1_decoded = votes[1].match_decoded_mef_memo(round_id, proposal_id).unwrap();
+    let v2_decoded = votes[2].match_decoded_mef_memo(round_id, proposal_id).unwrap();
+    let v3_decoded = votes[3].match_decoded_mef_memo(round_id, proposal_id).unwrap();
+    let v4_decoded = votes[4].match_decoded_mef_memo(round_id, proposal_id).unwrap();
+    let v5_decoded = votes[5].match_decoded_mef_memo(round_id, proposal_id).unwrap();
+    let v6_decoded = votes[6].match_decoded_mef_memo(round_id, proposal_id).unwrap();
+    let v7_decoded = votes[7].match_decoded_mef_memo(round_id, proposal_id).unwrap();
+    let v8_decoded = votes[8].match_decoded_mef_memo(round_id, proposal_id).unwrap();
+    let v9_decoded = votes[9].match_decoded_mef_memo(round_id, proposal_id).unwrap();
+    let v10_decoded = votes[10].match_decoded_mef_memo(round_id, proposal_id).unwrap();
 
-    assert_eq!(v0_decoded, "YES 1");
-    assert_eq!(v1_decoded, "YES 1");
-    assert_eq!(v2_decoded, "YES 1");
-    assert_eq!(v3_decoded, "YES 1");
-    assert_eq!(v4_decoded, "YES 1");
-    assert_eq!(v5_decoded, "YES 1");
-    assert_eq!(v6_decoded, "YES 1");
-    assert_eq!(v7_decoded, "YES 1");
-    assert_eq!(v8_decoded, "YES 1");
-    assert_eq!(v9_decoded, "YES 1");
-    assert_eq!(v10_decoded, "NO 1");
+    assert_eq!(v0_decoded, "MEF1 YES 1");
+    assert_eq!(v1_decoded, "MEF1 YES 1");
+    assert_eq!(v2_decoded, "MEF1 YES 1");
+    assert_eq!(v3_decoded, "MEF1 YES 1");
+    assert_eq!(v4_decoded, "MEF1 YES 1");
+    assert_eq!(v5_decoded, "MEF1 YES 1");
+    assert_eq!(v6_decoded, "MEF1 YES 1");
+    assert_eq!(v7_decoded, "MEF1 YES 1");
+    assert_eq!(v8_decoded, "MEF1 YES 1");
+    assert_eq!(v9_decoded, "MEF1 YES 1");
+    assert_eq!(v10_decoded, "MEF1 NO 1");
   }
 
   #[test]
   fn test_process_mep_votes() {
     let votes = get_test_mep_votes();
-    let binding = Wrapper(votes).process_mep(1, 130);
+    let binding = Wrapper(votes).process_mep(1, 1, 130);
     let processed = binding.to_vec().0;
 
     assert_eq!(processed.len(), 11);
@@ -419,14 +429,14 @@ mod tests {
 
     assert_eq!(a1.account, "1");
     assert_eq!(a1.hash, "1");
-    assert_eq!(a1.memo, "YES 1");
+    assert_eq!(a1.memo, "MEF1 YES 1");
     assert_eq!(a1.height, 331718);
     assert_eq!(a1.status, BlockStatus::Canonical);
     assert_eq!(a1.nonce, 1);
 
     assert_eq!(a2.account, "2");
     assert_eq!(a2.hash, "2");
-    assert_eq!(a2.memo, "YES 1");
+    assert_eq!(a2.memo, "MEF1 YES 1");
     assert_eq!(a2.height, 341719);
     assert_eq!(a2.status, BlockStatus::Pending);
     assert_eq!(a2.nonce, 2);
@@ -437,7 +447,7 @@ mod tests {
       Vote::new(
         "1",
         "1",
-        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        "E4Yh4PzVLrCiugdoaASo5Ve6Do755ey6vGqkURC8z7qcADqMUcp9K",
         331718,
         BlockStatus::Canonical,
         1730897878000,
@@ -446,7 +456,7 @@ mod tests {
       Vote::new(
         "2",
         "2",
-        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        "E4Yh4PzVLrCiugdoaASo5Ve6Do755ey6vGqkURC8z7qcADqMUcp9K",
         341719,
         BlockStatus::Pending,
         1730897878000,
@@ -455,7 +465,7 @@ mod tests {
       Vote::new(
         "3",
         "3",
-        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        "E4Yh4PzVLrCiugdoaASo5Ve6Do755ey6vGqkURC8z7qcADqMUcp9K",
         351320,
         BlockStatus::Pending,
         1730897878000,
@@ -464,7 +474,7 @@ mod tests {
       Vote::new(
         "4",
         "4",
-        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        "E4Yh4PzVLrCiugdoaASo5Ve6Do755ey6vGqkURC8z7qcADqMUcp9K",
         352721,
         BlockStatus::Pending,
         1730897878000,
@@ -473,7 +483,7 @@ mod tests {
       Vote::new(
         "5",
         "5",
-        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        "E4Yh4PzVLrCiugdoaASo5Ve6Do755ey6vGqkURC8z7qcADqMUcp9K",
         353722,
         BlockStatus::Pending,
         1730897878000,
@@ -482,7 +492,7 @@ mod tests {
       Vote::new(
         "6",
         "6",
-        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        "E4Yh4PzVLrCiugdoaASo5Ve6Do755ey6vGqkURC8z7qcADqMUcp9K",
         354723,
         BlockStatus::Pending,
         1730897878000,
@@ -491,7 +501,7 @@ mod tests {
       Vote::new(
         "7",
         "7",
-        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        "E4Yh4PzVLrCiugdoaASo5Ve6Do755ey6vGqkURC8z7qcADqMUcp9K",
         355724,
         BlockStatus::Pending,
         1730897878000,
@@ -500,7 +510,7 @@ mod tests {
       Vote::new(
         "8",
         "8",
-        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        "E4Yh4PzVLrCiugdoaASo5Ve6Do755ey6vGqkURC8z7qcADqMUcp9K",
         356725,
         BlockStatus::Pending,
         1730897878000,
@@ -509,7 +519,7 @@ mod tests {
       Vote::new(
         "9",
         "9",
-        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        "E4Yh4PzVLrCiugdoaASo5Ve6Do755ey6vGqkURC8z7qcADqMUcp9K",
         357726,
         BlockStatus::Pending,
         1730897878000,
@@ -518,7 +528,7 @@ mod tests {
       Vote::new(
         "10",
         "10",
-        "E4YXRxe1SLybDSwNoEKENNyoaj9ro9WDbiDPtJrX9Fmj5nUtVeq6x",
+        "E4Yh4PzVLrCiugdoaASo5Ve6Do755ey6vGqkURC8z7qcADqMUcp9K",
         358727,
         BlockStatus::Pending,
         1730897878000,
@@ -527,7 +537,7 @@ mod tests {
       Vote::new(
         "11",
         "11",
-        "E4YVQPTeHZGie6hAZbLSCbuj5UuhfWsCxnLbUgBPqGJgdi8XX9CNP",
+        "E4Yf7epFtpM8YAsxcGVagQQKmtUpwj8nKTWMQnWbXyhg7hE6ceJhJ",
         358728,
         BlockStatus::Pending,
         1730897878000,

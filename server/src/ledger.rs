@@ -18,7 +18,7 @@ impl Ledger {
       Self::download(ocv, hash, &dest).await?;
     }
     let contents = fs::read(dest)?;
-    Ok(Ledger(serde_json::from_slice(&contents[..]).unwrap()))
+    Ok(Ledger(serde_json::from_slice(&contents[..]).expect("Expecting a valid list of ledger accounts.")))
   }
 
   async fn download(ocv: &Ocv, hash: &String, to: &PathBuf) -> Result<()> {
@@ -30,10 +30,7 @@ impl Ledger {
       .await?
       .contents
       .and_then(|objects| {
-        objects
-          .into_iter()
-          .find(|object| object.key.as_ref().map_or(false, |key| key.contains(hash)))
-          .and_then(|x| x.key)
+        objects.into_iter().find(|object| object.key.as_ref().is_some_and(|key| key.contains(hash))).and_then(|x| x.key)
       })
       .ok_or(anyhow!("Could not retrieve dump corresponding to {hash}"))?;
     let bytes =
@@ -42,7 +39,7 @@ impl Ledger {
     let mut archive = Archive::new(tar_gz);
     for entry in archive.entries()? {
       let mut entry = entry?;
-      let path = entry.path()?.to_str().unwrap().to_owned();
+      let path = entry.path()?.to_str().expect("Expecting a valid path").to_owned();
       if s3_path.contains(&path) {
         let mut buffer = Vec::new();
         entry.read_to_end(&mut buffer)?;
