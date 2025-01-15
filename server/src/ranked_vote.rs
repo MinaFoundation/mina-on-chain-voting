@@ -105,6 +105,18 @@ Output:
  // **** Private structures ****
  
  type RoundId = u32;
+
+ #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+pub struct RankedVote {
+  pub account: String,
+  pub hash: String,
+  pub memo: String,
+  pub height: i64,
+  pub status: BlockStatus,
+  pub timestamp: i64,
+  pub nonce: i64,
+  pub proposals: Vec<String>,
+}
  
  #[derive(Eq, PartialEq, Debug, Clone, Copy, Hash, Ord, PartialOrd)]
  struct CandidateId(u32);

@@ -41,6 +41,7 @@ impl ServeArgs {
       .route("/api/proposal/:id", get(get_proposal))
       .route("/api/proposal/:id/results", get(get_proposal_result))
       .route("/api/mef_proposal_consideration/:id/:start_time/:end_time", get(get_proposal_consideration))
+      .route("/api/mef_ranked_vote/:round_id/:start_time/:end_time", get(run_ranked_vote))
       .layer(CorsLayer::permissive())
       .with_state(Arc::new(ocv));
     axum_serve(listener, router).with_graceful_shutdown(shutdown_signal()).await?;
@@ -81,4 +82,16 @@ async fn get_proposal_consideration(
   let ledger_hash = params.get("ledger_hash").cloned();
   tracing::info!("get_proposal_consideration {} {} {}", id, start_time, end_time);
   Wrapper(ctx.proposal_consideration(id, start_time, end_time, ledger_hash).await)
+}
+
+
+#[debug_handler]
+async fn run_ranked_vote(
+  ctx: State<Arc<Ocv>>,
+  Path((round_id, start_time, end_time)): Path<(usize, i64, i64)>,
+  Query(params): Query<HashMap<String, String>>,
+) -> impl IntoResponse {
+  let ledger_hash = params.get("ledger_hash").cloned();
+  tracing::info!("run_ranked_vote {} {} {}", round_id, start_time, end_time);
+  Wrapper(ctx.run_ranked_vote(round_id, start_time, end_time, ledger_hash).await)
 }

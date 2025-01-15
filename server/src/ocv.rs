@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use rust_decimal::Decimal;
 use serde::Serialize;
 
-use crate::{Archive, Ledger, Network, Proposal, ReleaseStage, Vote, VoteWithWeight, Wrapper, util::Caches};
+use crate::{Archive, Ledger, Network, Proposal, ReleaseStage, Vote, VoteWithWeight, Wrapper, util::Caches, RoundStats};
 
 #[derive(Clone)]
 pub struct Ocv {
@@ -249,6 +249,25 @@ impl Ocv {
     })
   }
 
+  pub async fn run_ranked_vote(&self, round_id: usize, start_time: i64, end_time: i64, ledger_hash: Option<String>,) -> Result<GetMinaRankedVoteResponse> {
+    let transactions = self.archive.fetch_transactions(start_time, end_time)?;
+
+    let chain_tip = self.archive.fetch_chain_tip()?;
+
+    let votes = Wrapper(transactions.into_iter().map(std::convert::Into::into).collect())
+      .process_ranked_vote(round_id, chain_tip)
+      .0; 
+    tracing::info!("run_ranked_vote {} {} {} {}", round_id, start_time, end_time, votes.len());
+    
+    Ok(GetMinaRankedVoteResponse {
+      round_id,
+      total_votes: votes.len()
+      // results: Vec<String>,
+      // threshold: u64,
+      // round_stats: Vec<RoundStats>,
+    })
+  }
+
   fn find_proposal(&self, id: usize) -> Result<Proposal> {
     Ok(self.proposals.iter().find(|proposal| proposal.id == id).ok_or(anyhow!("Proposal {id} dne."))?.to_owned())
   }
@@ -289,4 +308,13 @@ pub struct GetMinaProposalConsiderationResponse {
   vote_status: String,
   elegible: bool,
   votes: Vec<Vote>,
+}
+
+#[derive(Serialize)]
+pub struct GetMinaRankedVoteResponse {
+  round_id: usize,
+  total_votes: usize,
+  // results: Vec<String>,
+  // threshold: u64,
+  // round_stats: Vec<RoundStats>,
 }

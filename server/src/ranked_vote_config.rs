@@ -239,7 +239,7 @@ impl VoteRules {
         max_skipped_rank_allowed: MaxSkippedRank::Unlimited,
         // number_of_winners: 1,
         // minimum_vote_threshold: None,
-        max_rankings_allowed: None,
+        max_rankings_allowed: Some(2),
         elimination_algorithm: EliminationAlgorithm::Single,
         duplicate_candidate_mode: DuplicateCandidateMode::SkipDuplicate,
     };
