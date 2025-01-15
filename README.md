@@ -60,9 +60,9 @@ specially-constructed memo field. The memo field must adhere to the following co
 **For example:**
 
 ```
-To vote in favor of 'MEF 1', the memo field must be populated with: 'YES 1'
-Similarly, if the intent is to vote against 'MEF 1', the memo field must
-contain: 'NO 1'.
+To vote in favor of a MEF for funding round 1 and proposal #1, the memo field must be populated with: 'MEF1 YES 1'
+Similarly, if the intent is to vote against proposal #1, the memo field must
+contain: 'MEF1 NO 1'.
 ```
 
 *Vote With Auro Wallet*
@@ -70,11 +70,11 @@ contain: 'NO 1'.
 - Click on your wallet address to copy it to the clipboard (you’ll need it in step 4).
 - Navigate to the Send feature in the wallet.
 - In the To field, paste your own wallet address.
-- Enter 1 in the Amount field.
+- Enter the amount field (can be 0 MINA).
 - To cast your vote:
-   - Enter YES [ID] in the Memo field to vote in favor of the proposal.
-   - Enter NO [ID] in the Memo field to vote against the proposal.
-   - Replace # with the actual proposal ID you are voting for.
+   - Enter MEF[ROUND_ID] YES [PROPOSAL_ID] in the Memo field to vote in favor of the proposal.
+   - Enter MEF[ROUND_ID] NO [PROPOSAL_ID] in the Memo field to vote against the proposal.
+      - Replace [PROPOSAL_ID] with the actual proposal ID you are voting for and [ROUND_ID] the actual funding round.
    - Confirm and submit the transaction. Your vote will be recorded on-chain.
 
 # Proposal Consideration API
@@ -86,16 +86,17 @@ The **Proposal Consideration API** allows users to fetch detailed data about a p
 
 ## Endpoint
 
-### `GET /api/mef_proposal_consideration/:id/:start_time/:end_time?ledger_hash`
+### `GET /api/mef_proposal_consideration/:round_id/:proposal_id/:start_time/:end_time?ledger_hash`
 
 Retrieve details for a specific proposal within a specified time frame. Optionally, you can configure the ledger hash to compute vote weights.
 
 ### Path Parameters
-| Parameter    | Type      | Description                                          |
-|--------------|-----------|------------------------------------------------------|
-| `id`         | `integer` | Unique identifier for the proposal.                  |
-| `start_time` | `integer` | Proposal start time in milliseconds unix timestamp.  |
-| `end_time`   | `integer` | Proposal end time in milliseconds unix timestamp.    |
+| Parameter    | Type      | Description                                           |
+|---------------|-----------|------------------------------------------------------|
+| `round_id`    | `integer` | Unique identifier for the funding round.             |
+| `proposal_id` | `integer` | Unique identifier for the proposal.                  |
+| `start_time`  | `integer` | Proposal start time in milliseconds unix timestamp.  |
+| `end_time`    | `integer` | Proposal end time in milliseconds unix timestamp.    |
 
 ### Query Parameters (optional)
 | Parameter    | Type      | Description                                          |
@@ -108,6 +109,7 @@ Retrieve details for a specific proposal within a specified time frame. Optional
 
 | Field                   | Description                                                    |
 |-------------------------|----------------------------------------------------------------|
+| `round_id`                 | Unique identifier of the funding round.                     |
 | `proposal_id`                 | Unique identifier of the proposal.                       |
 | `total_community_votes`       | Total number of votes cast by the community.             |
 | `total_positive_community_votes` | Total number of positive votes cast by the community. |

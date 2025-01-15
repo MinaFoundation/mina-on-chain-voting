@@ -40,7 +40,10 @@ impl ServeArgs {
       .route("/api/proposals", get(get_proposals))
       .route("/api/proposal/:id", get(get_proposal))
       .route("/api/proposal/:id/results", get(get_proposal_result))
-      .route("/api/mef_proposal_consideration/:id/:start_time/:end_time", get(get_proposal_consideration))
+      .route(
+        "/api/mef_proposal_consideration/:round_id/:proposal_id/:start_time/:end_time",
+        get(get_proposal_consideration),
+      )
       .layer(CorsLayer::permissive())
       .with_state(Arc::new(ocv));
     axum_serve(listener, router).with_graceful_shutdown(shutdown_signal()).await?;
@@ -75,10 +78,10 @@ async fn get_proposal_result(ctx: State<Arc<Ocv>>, Path(id): Path<usize>) -> imp
 #[debug_handler]
 async fn get_proposal_consideration(
   ctx: State<Arc<Ocv>>,
-  Path((id, start_time, end_time)): Path<(usize, i64, i64)>,
+  Path((round_id, proposal_id, start_time, end_time)): Path<(usize, usize, i64, i64)>,
   Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
   let ledger_hash = params.get("ledger_hash").cloned();
-  tracing::info!("get_proposal_consideration {} {} {}", id, start_time, end_time);
-  Wrapper(ctx.proposal_consideration(id, start_time, end_time, ledger_hash).await)
+  tracing::info!("get_proposal_consideration {} {} {} {}", round_id, proposal_id, start_time, end_time);
+  Wrapper(ctx.proposal_consideration(round_id, proposal_id, start_time, end_time, ledger_hash).await)
 }
