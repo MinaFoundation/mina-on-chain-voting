@@ -31,7 +31,7 @@ jobs:
         run: echo "TAG_SERVER=${{ steps.ocv-server.outputs.app_version }}" >> $GITHUB_ENV
       - name: 🔑 ECR Login
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
       - name: 🔍 Check if Tag already exists
         id: checktag
         uses: tyriis/docker-image-tag-exists@main
@@ -66,7 +66,7 @@ jobs:
         run: echo "TAG_WEB=${{ steps.ocv-web.outputs.current-version }}" >> $GITHUB_ENV
       - name: 🔑 ECR Login
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
       - name: 🔍 Check if Tag already exists
         id: checktag
         uses: tyriis/docker-image-tag-exists@main
