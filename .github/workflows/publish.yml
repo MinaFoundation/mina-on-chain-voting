@@ -17,7 +17,7 @@ env:
 
 jobs:
   publish-server-image:
-    name: Build and Push Docker Image
+    name: Server - Build and Push Docker Image
     runs-on: minafoundation-default-runners
     steps:
       - name: 📥 Checkout
@@ -52,7 +52,7 @@ jobs:
           echo "TODO: Generate Release Notes (https://github.com/MinaProtocol/mf-devops-workflows/issues/23)"
 
   publish-web-image:
-    name: Build and Push Docker Image
+    name: Web - Build and Push Docker Image
     runs-on: minafoundation-default-runners
     steps:
       - name: 📥 Checkout
