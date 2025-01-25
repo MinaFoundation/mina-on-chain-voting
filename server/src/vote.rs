@@ -105,28 +105,25 @@ impl Vote {
 
   pub fn parse_decoded_ranked_votes_memo(&mut self, key: &str) -> Option<(String, Vec<String>)> {
     if let Ok(decoded) = self.decode_memo() {
-        let decoded = decoded.to_lowercase();
-        tracing::info!("decoded memo: {}", decoded);
-        // Split the decoded memo into prefix and proposals part
-        if let Some((prefix, proposals_part)) = decoded.split_once(' ') {
-            if prefix.starts_with("mef") {
-              tracing::info!("mef vote: {}", prefix);
-                let round_id = prefix.trim_start_matches("mef");
-                tracing::info!("round id: {}", round_id);
-                if round_id == key {
-                    // Split proposal IDs by whitespace
-                    let proposal_ids: Vec<String> = proposals_part
-                        .split_whitespace()
-                        .map(|id| id.to_string())
-                        .collect();
-                    tracing::info!("proposals {}", proposals_part);
-                    return Some((round_id.to_string(), proposal_ids));
-                }
-            }
+      let decoded = decoded.to_lowercase();
+      tracing::info!("decoded memo: {}", decoded);
+      // Split the decoded memo into prefix and proposals part
+      if let Some((prefix, proposals_part)) = decoded.split_once(' ') {
+        if prefix.starts_with("mef") {
+          tracing::info!("mef vote: {}", prefix);
+          let round_id = prefix.trim_start_matches("mef");
+          tracing::info!("round id: {}", round_id);
+          if round_id == key {
+            // Split proposal IDs by whitespace
+            let proposal_ids: Vec<String> = proposals_part.split_whitespace().map(|id| id.to_string()).collect();
+            tracing::info!("proposals {}", proposals_part);
+            return Some((round_id.to_string(), proposal_ids));
+          }
         }
+      }
     }
     None
-}
+  }
 
   pub(crate) fn decode_memo(&self) -> Result<String> {
     let decoded =
@@ -174,39 +171,6 @@ impl Wrapper<Vec<Vote>> {
     }
 
     Wrapper(map)
-  }
-
-  pub fn process_ranked_vote(self, id: usize, tip: i64) -> Wrapper<HashMap<String, Vote>> {
-      let mut map = HashMap::new();
-      let id_str = id.to_string();
-      
-      for mut vote in self.0 {
-          // Use the updated `match_decoded_ranked_vote_memo` function
-          if let Some((round_id, proposal_ids)) = vote.parse_decoded_ranked_votes_memo(&id_str) {
-              // Update the memo with round ID and proposal IDs
-              vote.update_memo(format!("Round: {}, Proposals: {:?}", round_id, proposal_ids));
-
-              // Update vote status if conditions are met
-              if tip - vote.height >= 10 {
-                  vote.update_status(BlockStatus::Canonical);
-              }
-
-              // Insert into the map based on account
-              match map.entry(vote.account.clone()) {
-                  Entry::Vacant(e) => {
-                      e.insert(vote);
-                  }
-                  Entry::Occupied(mut e) => {
-                      let current_vote = e.get_mut();
-                      if vote.is_newer_than(current_vote) {
-                          *current_vote = vote;
-                      }
-                  }
-              }
-          }
-      }
-
-      Wrapper(map)
   }
 
   pub fn process_mep(self, round_id: usize, proposal_id: usize, tip: i64) -> Wrapper<HashMap<String, Vote>> {
@@ -275,7 +239,6 @@ impl Wrapper<Vec<Vote>> {
     Wrapper(votes_with_stake)
   }
 }
-
 
 impl Wrapper<HashMap<String, Vote>> {
   pub fn to_vec(&self) -> Wrapper<Vec<Vote>> {
