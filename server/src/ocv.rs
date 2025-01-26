@@ -6,7 +6,7 @@ use serde::Serialize;
 
 use crate::{
   Archive, Ledger, Network, Proposal, ReleaseStage, RoundStats, Vote, VoteRules, VoteWithWeight, Wrapper,
-  ranked_vote::run_election1, util::Caches,
+  ranked_vote::run_election1, util::Caches, VotingResult
 };
 
 #[derive(Clone)]
@@ -282,26 +282,24 @@ impl Ocv {
     }
     let vote_rules = VoteRules::default();
     let election = run_election1(&votes, &vote_rules);
-    let winners = match election {
-      Ok(voting_result) => {
-        if let Some(winners) = voting_result.winners {
-          winners
-        } else {
-          vec![]
+    let voting_result = match election {
+      Ok(result) => result, // If the election is successful, take the VotingResult.
+      Err(error) => {
+          eprintln!("Election failed with error: {:?}", error);
+          VotingResult {
+            winners: Some(vec![]), // Default to no winners
+            threshold: 0,          // Set threshold to 0 or another sensible default
+            round_stats: vec![],   // Default to empty round statistics
         }
       }
-      Err(error) => {
-        eprintln!("Election failed with error: {:?}", error);
-        vec![]
-      }
-    };
+  };
 
     Ok(GetMinaRankedVoteResponse {
       round_id,
       total_votes: votes.len(),
-      results: winners,
+      winners: voting_result.winners.unwrap_or_else(|| vec![]),
       // threshold: u64,
-      // round_stats: Vec<RoundStats>,
+      round_stats: voting_result.round_stats
     })
   }
 
@@ -352,6 +350,7 @@ pub struct GetMinaProposalConsiderationResponse {
 pub struct GetMinaRankedVoteResponse {
   round_id: usize,
   total_votes: usize,
-  results: Vec<String>, /* threshold: u64,
-                         * round_stats: Vec<RoundStats>, */
+  winners: Vec<String>,
+  // threshold: u64,
+  round_stats: Vec<RoundStats>
 }

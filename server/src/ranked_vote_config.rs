@@ -1,6 +1,7 @@
 // ********* Input data structures ***********
 
 use std::{default::Default, error::Error, fmt::Display};
+use serde::{Deserialize, Serialize};
 
 /// All the possible states corresponding to a choice in a ballot.
 ///
@@ -41,7 +42,7 @@ pub struct Ballot {
 // ******** Output data structures *********
 
 /// Statistics for the elimination of the candidates.
-#[derive(Eq, PartialEq, Debug, Clone)]
+#[derive(Eq, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct EliminationStats {
   /// The name of the candidate being eliminated. It could also be
   /// 'Undeclared write-ins' to account for all the choices that do not
@@ -57,7 +58,7 @@ pub struct EliminationStats {
 }
 
 /// Statistics for one round
-#[derive(Eq, PartialEq, Debug, Clone)]
+#[derive(Eq, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct RoundStats {
   /// The id of the round (starting with 0)
   pub round: u32,
