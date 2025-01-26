@@ -17,7 +17,7 @@ env:
 
 jobs:
   publish-server-image:
-    name: Build and Push Docker Image
+    name: Server - Build and Push Docker Image
     runs-on: minafoundation-default-runners
     steps:
       - name: 📥 Checkout
@@ -31,7 +31,7 @@ jobs:
         run: echo "TAG_SERVER=${{ steps.ocv-server.outputs.app_version }}" >> $GITHUB_ENV
       - name: 🔑 ECR Login
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
       - name: 🔍 Check if Tag already exists
         id: checktag
         uses: tyriis/docker-image-tag-exists@main
@@ -52,7 +52,7 @@ jobs:
           echo "TODO: Generate Release Notes (https://github.com/MinaProtocol/mf-devops-workflows/issues/23)"
 
   publish-web-image:
-    name: Build and Push Docker Image
+    name: Web - Build and Push Docker Image
     runs-on: minafoundation-default-runners
     steps:
       - name: 📥 Checkout
@@ -66,7 +66,7 @@ jobs:
         run: echo "TAG_WEB=${{ steps.ocv-web.outputs.current-version }}" >> $GITHUB_ENV
       - name: 🔑 ECR Login
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
       - name: 🔍 Check if Tag already exists
         id: checktag
         uses: tyriis/docker-image-tag-exists@main
