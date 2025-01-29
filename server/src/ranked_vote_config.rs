@@ -148,13 +148,6 @@ pub enum DuplicateCandidateMode {
   SkipDuplicate,
 }
 
-/// The sort of election to run.
-/// For now, only elections with a single winner are implemented.
-#[derive(Eq, PartialEq, Debug, Clone)]
-pub enum WinnerElectionMode {
-  SingelWinnerMajority
-}
-
 /// The elimination algorithm to apply.
 ///
 /// - Single eliminates one candidate at a time. This is the easiest to
@@ -197,12 +190,10 @@ pub enum MaxSkippedRank {
 /// modify them.
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub struct VoteRules {
-  /// Tie break mode (see documentation)
+  /// Tie break mode 
   pub tiebreak_mode: TieBreakMode,
-  /// Overvoting control (see documentation)
+  /// Overvoting control
   pub overvote_rule: OverVoteRule,
-  /// Winner selection (see documentation)
-  pub winner_election_mode: WinnerElectionMode,
   // // TODO: remove
   // // pub(crate) number_of_winners: u32,
   // /// If set, indicates the minimum number of votes that a candidate
@@ -219,7 +210,7 @@ pub struct VoteRules {
   /// discarded.
   pub max_rankings_allowed: Option<u32>,
   pub elimination_algorithm: EliminationAlgorithm,
-  /// Duplicate candidate control (see documentation)
+  /// Duplicate candidate control 
   pub duplicate_candidate_mode: DuplicateCandidateMode,
 }
 
@@ -233,7 +224,6 @@ impl VoteRules {
   const DEFAULT_RULES: VoteRules = VoteRules {
     tiebreak_mode: TieBreakMode::UseCandidateOrder,
     overvote_rule: OverVoteRule::AlwaysSkipToNextRank,
-    winner_election_mode: WinnerElectionMode::SingelWinnerMajority,
     max_skipped_rank_allowed: MaxSkippedRank::Unlimited,
     max_rankings_allowed: Some(12),
     elimination_algorithm: EliminationAlgorithm::Single,
