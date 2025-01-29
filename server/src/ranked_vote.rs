@@ -239,9 +239,8 @@ enum RoundCandidateStatusInternal {
   Eliminated(Vec<(CandidateId, VoteCount)>, VoteCount),
 }
 
-// TODO: rename InternalRoundStatistics
 #[derive(Eq, PartialEq, Debug, Clone)]
-struct RoundStatistics {
+struct InternalRoundStatistics {
   candidate_stats: Vec<(CandidateId, VoteCount, RoundCandidateStatusInternal)>,
   uwi_elimination_stats: Option<(Vec<(CandidateId, VoteCount)>, VoteCount)>,
 }
@@ -249,12 +248,14 @@ struct RoundStatistics {
 #[derive(Eq, PartialEq, Debug, Clone)]
 struct RoundResult {
   votes: Vec<VoteInternal>,
-  stats: RoundStatistics,
+  stats: InternalRoundStatistics,
   // Winning vote threshold
   vote_threshold: VoteCount,
 }
 
-/// Runs an election using the instant-runoff voting algorithm.
+/// Multi-winner proportional election using the instant-runoff voting algorithm.
+/// Runs single-winner elections until the required number 
+/// of winners is reached or no remaining candidates are left.
 pub fn run_election(builder: &Builder) -> Result<VotingResult, VotingErrors> {
   let mut winners: Vec<String> = Vec::new();
   let mut remaining_candidates = builder._candidates.to_owned().unwrap_or_else(|| Vec::new());
@@ -364,7 +365,7 @@ fn run_voting_stats(
   // The candidates that are still running, in sorted order as defined by input.
   let mut cur_sorted_candidates: Vec<(String, CandidateId)> = all_candidates.clone();
   let mut cur_votes: Vec<VoteInternal> = checked_votes;
-  let mut cur_stats: Vec<RoundStatistics> = Vec::new();
+  let mut cur_stats: Vec<InternalRoundStatistics> = Vec::new();
 
   // TODO: better management of the number of iterations
   while cur_stats.iter().len() < 10000 {
@@ -436,7 +437,7 @@ fn run_voting_stats(
 
 fn print_round_stats(
   round_id: RoundId,
-  stats: &RoundStatistics,
+  stats: &InternalRoundStatistics,
   candidate_names: &[(String, CandidateId)],
   vote_threshold: VoteCount,
 ) {
@@ -492,7 +493,7 @@ fn get_threshold(tally: &HashMap<CandidateId, VoteCount>) -> VoteCount {
 }
 
 fn round_results_to_stats(
-  results: &[RoundStatistics],
+  results: &[InternalRoundStatistics],
   candidates_by_id: &HashMap<CandidateId, String>,
 ) -> Result<Vec<RoundStats>, VotingErrors> {
   let mut res: Vec<RoundStats> = Vec::new();
@@ -504,7 +505,7 @@ fn round_results_to_stats(
 }
 
 fn round_result_to_stat(
-  stats: &RoundStatistics,
+  stats: &InternalRoundStatistics,
   round_id: RoundId,
   candidates_by_id: &HashMap<CandidateId, String>,
 ) -> Result<RoundStats, VotingErrors> {
@@ -584,7 +585,7 @@ fn run_first_round_uwi(
     *e += v.count;
   }
 
-  let full_stats = RoundStatistics {
+  let full_stats = InternalRoundStatistics {
     candidate_stats: tally.iter().map(|(cid, vc)| (*cid, *vc, RoundCandidateStatusInternal::StillRunning)).collect(),
     uwi_elimination_stats: Some((elimination_stats.iter().map(|(cid, vc)| (*cid, *vc)).collect(), uwi_first_exhausted)),
   };
@@ -627,7 +628,7 @@ fn run_one_round(
   // TODO: improve with multi candidate modes.
   if tally.len() == 1 {
       debug!("run_one_round: only one candidate, directly winning: {:?}", tally);
-      let stats = RoundStatistics {
+      let stats = InternalRoundStatistics {
           candidate_stats: tally.iter().map(|(cid, count)| (*cid, *count, RoundCandidateStatusInternal::Elected)).collect(),
           uwi_elimination_stats: Some((vec![], VoteCount::EMPTY)),
       };
@@ -734,7 +735,7 @@ fn run_one_round(
 
   Ok(RoundResult {
       votes: rem_votes,
-      stats: RoundStatistics { candidate_stats, uwi_elimination_stats: None },
+      stats: InternalRoundStatistics { candidate_stats, uwi_elimination_stats: None },
       vote_threshold,
   })
 }
@@ -756,7 +757,6 @@ fn find_eliminated_candidates(
     return Ok((v, tb));
   }
   // No candidate to eliminate.
-  // TODO check the conditions for this to happen.
   Err(VotingErrors::EmptyElection)
 }
 
