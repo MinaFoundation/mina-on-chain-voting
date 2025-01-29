@@ -103,6 +103,28 @@ impl Vote {
     None
   }
 
+  pub fn parse_decoded_ranked_votes_memo(&mut self, key: &str) -> Option<(String, Vec<String>)> {
+    if let Ok(decoded) = self.decode_memo() {
+      let decoded = decoded.to_lowercase();
+      tracing::info!("decoded memo: {}", decoded);
+      // Split the decoded memo into prefix and proposals part
+      if let Some((prefix, proposals_part)) = decoded.split_once(' ') {
+        if prefix.starts_with("mef") {
+          tracing::info!("mef vote: {}", prefix);
+          let round_id = prefix.trim_start_matches("mef");
+          tracing::info!("round id: {}", round_id);
+          if round_id == key {
+            // Split proposal IDs by whitespace
+            let proposal_ids: Vec<String> = proposals_part.split_whitespace().map(|id| id.to_string()).collect();
+            tracing::info!("proposals {}", proposals_part);
+            return Some((round_id.to_string(), proposal_ids));
+          }
+        }
+      }
+    }
+    None
+  }
+
   pub(crate) fn decode_memo(&self) -> Result<String> {
     let decoded =
       bs58::decode(&self.memo).into_vec().with_context(|| format!("failed to decode memo {} - bs58", &self.memo))?;
