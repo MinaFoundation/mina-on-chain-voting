@@ -1,6 +1,7 @@
 // ********* Input data structures ***********
 
 use std::{default::Default, error::Error, fmt::Display};
+
 use serde::{Deserialize, Serialize};
 
 /// All the possible states corresponding to a choice in a ballot.
@@ -79,7 +80,7 @@ pub struct VotingResult {
   /// The threshold that was applied to determine the winners.
   pub threshold: u64,
   /// The statistics for each round.
-  pub round_stats: Vec<RoundStats>
+  pub round_stats: Vec<RoundStats>,
 }
 
 /// Errors that prevent the algorithm from completing successfully.
@@ -190,7 +191,7 @@ pub enum MaxSkippedRank {
 /// modify them.
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub struct VoteRules {
-  /// Tie break mode 
+  /// Tie break mode
   pub tiebreak_mode: TieBreakMode,
   /// Overvoting control
   pub overvote_rule: OverVoteRule,
@@ -210,7 +211,7 @@ pub struct VoteRules {
   /// discarded.
   pub max_rankings_allowed: Option<u32>,
   pub elimination_algorithm: EliminationAlgorithm,
-  /// Duplicate candidate control 
+  /// Duplicate candidate control
   pub duplicate_candidate_mode: DuplicateCandidateMode,
 }
 
