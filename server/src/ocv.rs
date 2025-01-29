@@ -5,8 +5,8 @@ use rust_decimal::Decimal;
 use serde::Serialize;
 
 use crate::{
-  Archive, Ledger, Network, Proposal, ReleaseStage, RoundStats, Vote, VoteRules, VoteWithWeight, Wrapper,
-  ranked_vote::run_election1, util::Caches, VotingResult
+  Archive, Ledger, Network, Proposal, ReleaseStage, RoundStats, Vote, VoteRules, VoteWithWeight, Wrapper, RankedVote,
+  ranked_vote::run_simple_election, util::Caches, VotingResult
 };
 
 #[derive(Clone)]
@@ -278,10 +278,11 @@ impl Ocv {
     let mut votes: Vec<Vec<&str>> = Vec::new();
     for (_, ranked_vote) in ranked_votes.iter() {
       let vote_proposals: Vec<&str> = ranked_vote.proposals.iter().map(String::as_str).collect();
+      tracing::info!("vote_proposals {} {}", vote_proposals.len(), ranked_vote.account);
       votes.push(vote_proposals);
     }
     let vote_rules = VoteRules::default();
-    let election = run_election1(&votes, &vote_rules);
+    let election = run_simple_election(&votes, &vote_rules);
     let voting_result = match election {
       Ok(result) => result, // If the election is successful, take the VotingResult.
       Err(error) => {
@@ -298,8 +299,8 @@ impl Ocv {
       round_id,
       total_votes: votes.len(),
       winners: voting_result.winners.unwrap_or_else(|| vec![]),
-      // threshold: u64,
-      round_stats: voting_result.round_stats
+      round_stats: voting_result.round_stats,
+      votes: ranked_votes.into_values().collect()
     })
   }
 
@@ -351,6 +352,6 @@ pub struct GetMinaRankedVoteResponse {
   round_id: usize,
   total_votes: usize,
   winners: Vec<String>,
-  // threshold: u64,
-  round_stats: Vec<RoundStats>
+  round_stats: Vec<RoundStats>,
+  votes: Vec<RankedVote>,
 }

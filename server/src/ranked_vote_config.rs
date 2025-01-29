@@ -79,7 +79,7 @@ pub struct VotingResult {
   /// The threshold that was applied to determine the winners.
   pub threshold: u64,
   /// The statistics for each round.
-  pub round_stats: Vec<RoundStats>,
+  pub round_stats: Vec<RoundStats>
 }
 
 /// Errors that prevent the algorithm from completing successfully.
@@ -104,9 +104,6 @@ impl Display for VotingErrors {
 // ********* Configuration **********
 
 // The configuration options
-// They follow the configuration options defined here:
-// https://github.com/BrightSpots/rcv/blob/develop/config_file_documentation.txt
-
 /// The different modes to break a tie in case of multiple counts.
 #[derive(Eq, PartialEq, Debug, Clone, Copy)]
 pub enum TieBreakMode {
@@ -116,10 +113,6 @@ pub enum TieBreakMode {
   UseCandidateOrder,
   /// Use a random order. The input argument is the seed to initialize the
   /// order.
-  ///
-  /// Note: the random mode is implemented differently than the 'rcv' program.
-  /// It uses a cryptographic hash on the candidate names instead of relying
-  /// on the java primitives.
   Random(u32),
 }
 
@@ -159,7 +152,7 @@ pub enum DuplicateCandidateMode {
 /// For now, only elections with a single winner are implemented.
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum WinnerElectionMode {
-  SingelWinnerMajority, // TODO add the other modes
+  SingelWinnerMajority
 }
 
 /// The elimination algorithm to apply.
@@ -242,10 +235,8 @@ impl VoteRules {
     overvote_rule: OverVoteRule::AlwaysSkipToNextRank,
     winner_election_mode: WinnerElectionMode::SingelWinnerMajority,
     max_skipped_rank_allowed: MaxSkippedRank::Unlimited,
-    // number_of_winners: 1,
-    // minimum_vote_threshold: None,
-    max_rankings_allowed: Some(15),
-    elimination_algorithm: EliminationAlgorithm::Batch,
+    max_rankings_allowed: Some(12),
+    elimination_algorithm: EliminationAlgorithm::Single,
     duplicate_candidate_mode: DuplicateCandidateMode::SkipDuplicate,
   };
 }
