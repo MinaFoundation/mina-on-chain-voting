@@ -61,7 +61,16 @@ impl RankedVote {
     timestamp: i64,
     nonce: i64,
   ) -> Self {
-    Self { account: account.into(), hash: hash.into(), memo: memo.into(), height, status, timestamp, nonce, proposals: vec![] }
+    Self {
+      account: account.into(),
+      hash: hash.into(),
+      memo: memo.into(),
+      height,
+      status,
+      timestamp,
+      nonce,
+      proposals: vec![],
+    }
   }
 
   pub fn update_memo(&mut self, memo: impl Into<String>) {
@@ -307,8 +316,7 @@ fn candidates_from_ballots(ballots: &[Ballot]) -> Vec<Candidate> {
 /// * `coll` the collection of votes to process
 /// * `rules` the rules that govern this election
 /// * `candidates` the registered candidates for this election. If not provided,
-///   the
-///   candidates will be inferred from the votes.
+///   the candidates will be inferred from the votes.
 fn run_voting_stats(
   coll: &[Ballot],
   rules: &VoteRules,
