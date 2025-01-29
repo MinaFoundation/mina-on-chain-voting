@@ -414,7 +414,7 @@ fn run_voting_stats(
       let stats = round_results_to_stats(&cur_stats, &candidates_by_id)?;
       let mut winner_names: Vec<String> = Vec::new();
       for cid in &winners {
-        winner_names.push(candidates_by_id.get(cid).unwrap().clone());
+        winner_names.push(candidates_by_id.get(cid).expect("Candidate not found").clone());
       }
       return Ok(VotingResult {
         threshold: round_res.vote_threshold.0,
