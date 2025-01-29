@@ -5,16 +5,13 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use diesel::SqlType;
-use diesel_derive_enum::DbEnum;
-use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use tracing::log::{debug, info};
 
 use crate::{
   Ballot, BallotChoice, Builder, Candidate, DuplicateCandidateMode, EliminationAlgorithm, EliminationStats,
-  MaxSkippedRank, OverVoteRule, Proposal, RoundStats, TieBreakMode, VoteRules, VotingErrors, VotingResult, Wrapper,
-  archive::FetchTransactionResult, ledger::Ledger, vote::BlockStatus,
+  MaxSkippedRank, OverVoteRule, RoundStats, TieBreakMode, VoteRules, VotingErrors, VotingResult, Wrapper,
+  archive::FetchTransactionResult, vote::BlockStatus,
 };
 
 // **** Private structures ****
@@ -63,9 +60,8 @@ impl RankedVote {
     status: BlockStatus,
     timestamp: i64,
     nonce: i64,
-    proposals: Vec<String>,
   ) -> Self {
-    Self { account: account.into(), hash: hash.into(), memo: memo.into(), height, status, timestamp, nonce, proposals }
+    Self { account: account.into(), hash: hash.into(), memo: memo.into(), height, status, timestamp, nonce, proposals: vec![] }
   }
 
   pub fn update_memo(&mut self, memo: impl Into<String>) {
@@ -150,7 +146,7 @@ impl RankedVoteCandidates {
 
 impl From<FetchTransactionResult> for RankedVote {
   fn from(res: FetchTransactionResult) -> Self {
-    RankedVote::new(res.account, res.hash, res.memo, res.height, res.status, res.timestamp, res.nonce, vec![])
+    RankedVote::new(res.account, res.hash, res.memo, res.height, res.status, res.timestamp, res.nonce)
   }
 }
 impl Wrapper<Vec<RankedVote>> {
@@ -219,16 +215,6 @@ struct VoteInternal {
   count: VoteCount,
 }
 
-#[derive(Eq, PartialEq, Debug, Clone, Hash)]
-struct VoteSignature {
-  // Guaranteed to never be empty at construction.
-  ranks: Vec<CandidateId>,
-  // Guaranteed to never be zero at construction
-  count: VoteCount,
-}
-
-impl VoteSignature {}
-
 #[derive(Eq, PartialEq, Debug, Clone)]
 enum RoundCandidateStatusInternal {
   StillRunning,
@@ -257,12 +243,12 @@ struct RoundResult {
 /// of winners is reached or no remaining candidates are left.
 pub fn run_election(builder: &Builder) -> Result<VotingResult, VotingErrors> {
   let mut winners: Vec<String> = Vec::new();
-  let mut remaining_candidates = builder._candidates.to_owned().unwrap_or_else(|| Vec::new());
+  let mut remaining_candidates = builder._candidates.to_owned().unwrap_or_default();
   while winners.len() < builder._rules.max_rankings_allowed.unwrap_or(usize::MAX as u32) as usize
     && !remaining_candidates.is_empty()
   {
     let election = run_voting_stats(&builder._votes, &builder._rules, &Some(remaining_candidates.clone()));
-    let voting_result = match election {
+    match election {
       Ok(result) => {
         if let Some(mut elected_winners) = result.winners {
           winners.append(&mut elected_winners); // Flatten the Option<Vec<String>> into Vec<String>
@@ -322,9 +308,9 @@ fn candidates_from_ballots(ballots: &[Ballot]) -> Vec<Candidate> {
 /// * `rules` the rules that govern this election
 /// * `candidates` the registered candidates for this election. If not provided,
 ///   the
-/// candidates will be inferred from the votes.
+///   candidates will be inferred from the votes.
 fn run_voting_stats(
-  coll: &Vec<Ballot>,
+  coll: &[Ballot],
   rules: &VoteRules,
   candidates_o: &Option<Vec<Candidate>>,
 ) -> Result<VotingResult, VotingErrors> {
@@ -420,7 +406,7 @@ fn run_voting_stats(
       let stats = round_results_to_stats(&cur_stats, &candidates_by_id)?;
       let mut winner_names: Vec<String> = Vec::new();
       for cid in &winners {
-        winner_names.push(candidates_by_id.get(&cid).unwrap().clone());
+        winner_names.push(candidates_by_id.get(cid).unwrap().clone());
       }
       return Ok(VotingResult {
         threshold: round_res.vote_threshold.0,

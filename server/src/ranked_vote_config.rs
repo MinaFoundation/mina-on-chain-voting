@@ -142,7 +142,7 @@ pub enum OverVoteRule {
 /// - with Exhaust, this ballot would be entirely discarded
 /// - with SkipDuplicate, this ballot would be equivalent to reducing `B` to
 ///   only
-/// a single instance: `[B, C]`.
+///   a single instance: `[B, C]`.
 #[derive(Eq, PartialEq, Debug, Clone, Copy)]
 pub enum DuplicateCandidateMode {
   Exhaust,
@@ -152,11 +152,10 @@ pub enum DuplicateCandidateMode {
 /// The elimination algorithm to apply.
 ///
 /// - Single eliminates one candidate at a time. This is the easiest to
-/// understand, but it may add many more rounds when there a lot of
-/// candidates with a comparatively very low number of votes.
+///   understand, but it may add many more rounds when there a lot of
+///   candidates with a comparatively very low number of votes.
 ///
 /// - Batch eliminates candidates more rapidly.
-/// TODO document algorithm.
 #[derive(Eq, PartialEq, Debug, Clone, Copy)]
 pub enum EliminationAlgorithm {
   Batch,
@@ -170,7 +169,7 @@ pub enum EliminationAlgorithm {
 /// - ExhaustOnFirstOccurence would discard this ballot
 /// - `MaxAllowed(3)` would read this ballot as `[A]`, but `MaxAllowed(2)` or
 ///   below would
-/// exhaust the ballot.
+///   exhaust the ballot.
 ///
 /// The rule is only applied to sequences of blank or undervotes. For instance,
 /// `MaxAllowed(2)` would:

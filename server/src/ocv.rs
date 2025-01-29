@@ -298,7 +298,7 @@ impl Ocv {
     Ok(GetMinaRankedVoteResponse {
       round_id,
       total_votes: votes.len(),
-      winners: voting_result.winners.unwrap_or_else(|| vec![]),
+      winners: voting_result.winners.unwrap_or_else(Vec::new),
       round_stats: voting_result.round_stats,
       votes: ranked_votes.into_values().collect(),
     })
