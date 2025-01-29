@@ -4,7 +4,10 @@ use anyhow::{Result, anyhow};
 use rust_decimal::Decimal;
 use serde::Serialize;
 
-use crate::{Archive, Ledger, Network, Proposal, ReleaseStage, Vote, VoteWithWeight, Wrapper, util::Caches};
+use crate::{
+  Archive, Ledger, Network, Proposal, RankedVote, ReleaseStage, RoundStats, Vote, VoteRules, VoteWithWeight,
+  VotingResult, Wrapper, ranked_vote::run_simple_election, util::Caches,
+};
 
 #[derive(Clone)]
 pub struct Ocv {
@@ -255,6 +258,52 @@ impl Ocv {
     })
   }
 
+  pub async fn run_ranked_vote(
+    &self,
+    round_id: usize,
+    start_time: i64,
+    end_time: i64,
+    _ledger_hash: Option<String>,
+  ) -> Result<GetMinaRankedVoteResponse> {
+    let transactions = self.archive.fetch_transactions(start_time, end_time)?;
+
+    let chain_tip = self.archive.fetch_chain_tip()?;
+
+    let votes = Wrapper(transactions.into_iter().map(std::convert::Into::into).collect())
+      .process_ranked_vote(round_id, chain_tip)
+      .0;
+    tracing::info!("run_ranked_vote {} {} {} {}", round_id, start_time, end_time, votes.len());
+
+    let ranked_votes = votes; // Unwrap the wrapper to access the HashMap
+    let mut votes: Vec<Vec<&str>> = Vec::new();
+    for (_, ranked_vote) in ranked_votes.iter() {
+      let vote_proposals: Vec<&str> = ranked_vote.proposals.iter().map(String::as_str).collect();
+      tracing::info!("vote_proposals {} {}", vote_proposals.len(), ranked_vote.account);
+      votes.push(vote_proposals);
+    }
+    let vote_rules = VoteRules::default();
+    let election = run_simple_election(&votes, &vote_rules);
+    let voting_result = match election {
+      Ok(result) => result, // If the election is successful, take the VotingResult.
+      Err(error) => {
+        eprintln!("Election failed with error: {:?}", error);
+        VotingResult {
+          winners: Some(vec![]), // Default to no winners
+          threshold: 0,          // Set threshold to 0 or another sensible default
+          round_stats: vec![],   // Default to empty round statistics
+        }
+      }
+    };
+
+    Ok(GetMinaRankedVoteResponse {
+      round_id,
+      total_votes: votes.len(),
+      winners: voting_result.winners.unwrap_or_else(Vec::new),
+      round_stats: voting_result.round_stats,
+      votes: ranked_votes.into_values().collect(),
+    })
+  }
+
   fn find_proposal(&self, id: usize) -> Result<Proposal> {
     Ok(self.proposals.iter().find(|proposal| proposal.id == id).ok_or(anyhow!("Proposal {id} dne."))?.to_owned())
   }
@@ -296,4 +345,13 @@ pub struct GetMinaProposalConsiderationResponse {
   vote_status: String,
   elegible: bool,
   votes: Vec<Vote>,
+}
+
+#[derive(Serialize)]
+pub struct GetMinaRankedVoteResponse {
+  round_id: usize,
+  total_votes: usize,
+  winners: Vec<String>,
+  round_stats: Vec<RoundStats>,
+  votes: Vec<RankedVote>,
 }
