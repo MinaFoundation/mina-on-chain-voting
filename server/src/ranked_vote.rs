@@ -816,7 +816,7 @@ fn find_eliminated_candidates_single(
   }
   assert!(tally.len() >= 2);
 
-  let min_count: VoteCount = *tally.values().min().unwrap();
+  let min_count: VoteCount = *tally.values().min().expect("No votes found");
 
   let all_smallest: Vec<CandidateId> =
     tally.iter().filter_map(|(cid, vc)| if *vc <= min_count { Some(cid) } else { None }).cloned().collect();
@@ -834,7 +834,7 @@ fn find_eliminated_candidates_single(
       let candidate_order: HashMap<CandidateId, usize> =
         candidate_names.iter().enumerate().map(|(idx, (_, cid))| (*cid, idx)).collect();
       let mut res = all_smallest;
-      res.sort_by_key(|cid| candidate_order.get(cid).unwrap());
+      res.sort_by_key(|cid| candidate_order.get(cid).expect("Candidate not found in order"));
       // For loser selection, the selection is done in reverse order according to the
       // reference implementation.
       res.reverse();
@@ -852,7 +852,7 @@ fn find_eliminated_candidates_single(
             .iter()
             .filter_map(|(n, cid2)| if cid == cid2 { Some((*cid2, n.clone())) } else { None })
             .next();
-          m.unwrap()
+          m.expect("Option is None when unwrap() was called")
         })
         .collect();
       let res = candidate_permutation_crypto(&cand_with_names, seed, num_round);
@@ -874,7 +874,7 @@ fn find_eliminated_candidates_single(
   // We are currently proceeding to remove all the candidates. Do not remove the
   // last one.
   if sc.len() == tally.len() {
-    let last = sc.last().unwrap();
+    let last = sc.last().expect("No elements in collection");
     sorted_candidates.retain(|cid| cid != last);
   }
   Some((sorted_candidates, TiebreakSituation::TiebreakOccured))
