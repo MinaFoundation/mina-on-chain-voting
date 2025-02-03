@@ -101,17 +101,21 @@ impl RankedVote {
     if let Ok(decoded) = self.decode_memo() {
       let decoded = decoded.to_lowercase();
 
-      // Split the decoded memo into prefix and proposals part
-      if let Some((prefix, proposals_part)) = decoded.split_once(' ') {
-        if prefix.starts_with("mef") {
-          let round_id = prefix.trim_start_matches("mef");
+      // Split the decoded memo into parts by whitespace
+      let mut parts = decoded.split_whitespace();
 
-          if round_id == key {
-            // Split proposal IDs by whitespace
-            let proposal_ids: Vec<String> = proposals_part.split_whitespace().map(|id| id.to_string()).collect();
-            tracing::info!("decoded memo: {}", decoded);
-            tracing::info!("proposals {}", proposals_part);
-            return Some((round_id.to_string(), proposal_ids));
+      // Check if the first part is the "MEF" prefix
+      if let Some(prefix) = parts.next() {
+        if prefix == "mef" {
+          // Extract the round_id
+          if let Some(round_id) = parts.next() {
+            if round_id == key {
+              // Collect remaining parts as proposal IDs
+              let proposal_ids: Vec<String> = parts.map(|id| id.to_string()).collect();
+              tracing::info!("decoded memo: {}", decoded);
+              tracing::info!("proposals: {:?}", proposal_ids);
+              return Some((round_id.to_string(), proposal_ids));
+            }
           }
         }
       }
