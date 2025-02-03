@@ -9,9 +9,9 @@ use serde::{Deserialize, Serialize};
 use tracing::log::{debug, info};
 
 use crate::{
-  Ballot, BallotChoice, Builder, Candidate, DuplicateCandidateMode, EliminationAlgorithm, EliminationStats,
-  MaxSkippedRank, OverVoteRule, RoundStats, TieBreakMode, VoteRules, VotingErrors, VotingResult, Wrapper,
-  archive::FetchTransactionResult, vote::BlockStatus, ElectionResult, ElectionStats
+  Ballot, BallotChoice, Builder, Candidate, DuplicateCandidateMode, ElectionResult, ElectionStats,
+  EliminationAlgorithm, EliminationStats, MaxSkippedRank, OverVoteRule, RoundStats, TieBreakMode, VoteRules,
+  VotingErrors, VotingResult, Wrapper, archive::FetchTransactionResult, vote::BlockStatus,
 };
 
 // **** Private structures ****
@@ -270,14 +270,9 @@ pub fn run_election(builder: &Builder) -> Result<ElectionResult, VotingErrors> {
         if let Some(mut elected_winners) = result.winners {
           winners.append(&mut elected_winners); // Flatten the Option<Vec<String>> into Vec<String>
           remaining_candidates.retain(|c| !winners.contains(&c.name)); // Remove elected candidates
-            // Increment ranking spot for next selection
-            spot_position += elected_winners.len() as u32;
-          let election_stats = ElectionStats {
-            spot_position: spot_position,
-            round_stats: result.round_stats,
-        };
-    
-        
+          // Increment ranking spot for next selection
+          spot_position += elected_winners.len() as u32;
+          let election_stats = ElectionStats { spot_position, round_stats: result.round_stats };
 
           all_round_stats.push(election_stats);
         }

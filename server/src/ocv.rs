@@ -5,8 +5,8 @@ use rust_decimal::Decimal;
 use serde::Serialize;
 
 use crate::{
-  Archive, Ledger, Network, Proposal, RankedVote, ReleaseStage, Vote, VoteRules, VoteWithWeight, ElectionResult,
-  ElectionStats, Wrapper, ranked_vote::run_simple_election, util::Caches,
+  Archive, ElectionResult, ElectionStats, Ledger, Network, Proposal, RankedVote, ReleaseStage, Vote, VoteRules,
+  VoteWithWeight, Wrapper, ranked_vote::run_simple_election, util::Caches,
 };
 
 #[derive(Clone)]
@@ -289,7 +289,7 @@ impl Ocv {
         eprintln!("Election failed with error: {:?}", error);
         ElectionResult {
           winners: Some(vec![]), // Default to no winners
-          stats: vec![],   // Default to empty round statistics
+          stats: vec![],         // Default to empty round statistics
         }
       }
     };

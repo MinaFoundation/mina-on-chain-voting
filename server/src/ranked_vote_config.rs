@@ -61,7 +61,8 @@ pub struct EliminationStats {
 /// Election Statistics.
 #[derive(Eq, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct ElectionStats {
-  /// The position of the current election spot in the ranking process, starting from 1.
+  /// The position of the current election spot in the ranking process, starting
+  /// from 1.
   pub spot_position: u32,
   /// The statistics for each spot
   pub round_stats: Vec<RoundStats>,
@@ -75,7 +76,6 @@ pub struct ElectionResult {
   /// The statistics for each round.
   pub stats: Vec<ElectionStats>,
 }
-
 
 /// Statistics for one round
 #[derive(Eq, PartialEq, Debug, Clone, Serialize, Deserialize)]
