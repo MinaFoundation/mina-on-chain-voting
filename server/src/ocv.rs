@@ -5,8 +5,8 @@ use rust_decimal::Decimal;
 use serde::Serialize;
 
 use crate::{
-  Archive, Ledger, Network, Proposal, RankedVote, ReleaseStage, RoundStats, Vote, VoteRules, VoteWithWeight,
-  VotingResult, Wrapper, ranked_vote::run_simple_election, util::Caches,
+  Archive, ElectionResult, ElectionStats, Ledger, Network, Proposal, RankedVote, ReleaseStage, Vote, VoteRules,
+  VoteWithWeight, Wrapper, ranked_vote::run_simple_election, util::Caches,
 };
 
 #[derive(Clone)]
@@ -284,13 +284,12 @@ impl Ocv {
     let vote_rules = VoteRules::default();
     let election = run_simple_election(&votes, &vote_rules);
     let voting_result = match election {
-      Ok(result) => result, // If the election is successful, take the VotingResult.
+      Ok(result) => result, // If the election is successful, take the ElectionResult.
       Err(error) => {
         eprintln!("Election failed with error: {:?}", error);
-        VotingResult {
+        ElectionResult {
           winners: Some(vec![]), // Default to no winners
-          threshold: 0,          // Set threshold to 0 or another sensible default
-          round_stats: vec![],   // Default to empty round statistics
+          stats: vec![],         // Default to empty round statistics
         }
       }
     };
@@ -299,7 +298,7 @@ impl Ocv {
       round_id,
       total_votes: votes.len(),
       winners: voting_result.winners.unwrap_or_else(Vec::new),
-      round_stats: voting_result.round_stats,
+      stats: voting_result.stats,
       votes: ranked_votes.into_values().collect(),
     })
   }
@@ -352,6 +351,6 @@ pub struct GetMinaRankedVoteResponse {
   round_id: usize,
   total_votes: usize,
   winners: Vec<String>,
-  round_stats: Vec<RoundStats>,
+  stats: Vec<ElectionStats>,
   votes: Vec<RankedVote>,
 }

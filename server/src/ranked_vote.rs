@@ -9,9 +9,9 @@ use serde::{Deserialize, Serialize};
 use tracing::log::{debug, info};
 
 use crate::{
-  Ballot, BallotChoice, Builder, Candidate, DuplicateCandidateMode, EliminationAlgorithm, EliminationStats,
-  MaxSkippedRank, OverVoteRule, RoundStats, TieBreakMode, VoteRules, VotingErrors, VotingResult, Wrapper,
-  archive::FetchTransactionResult, vote::BlockStatus,
+  Ballot, BallotChoice, Builder, Candidate, DuplicateCandidateMode, ElectionResult, ElectionStats,
+  EliminationAlgorithm, EliminationStats, MaxSkippedRank, OverVoteRule, RoundStats, TieBreakMode, VoteRules,
+  VotingErrors, VotingResult, Wrapper, archive::FetchTransactionResult, vote::BlockStatus,
 };
 
 // **** Private structures ****
@@ -254,9 +254,13 @@ struct RoundResult {
 /// Multi-winner proportional election using the instant-runoff voting
 /// algorithm. Runs single-winner elections until the required number
 /// of winners is reached or no remaining candidates are left.
-pub fn run_election(builder: &Builder) -> Result<VotingResult, VotingErrors> {
+pub fn run_election(builder: &Builder) -> Result<ElectionResult, VotingErrors> {
   let mut winners: Vec<String> = Vec::new();
   let mut remaining_candidates = builder._candidates.to_owned().unwrap_or_default();
+  let mut all_round_stats: Vec<ElectionStats> = Vec::new();
+
+  let mut spot_position = 0; // Track ranking spot
+
   while winners.len() < builder._rules.max_rankings_allowed.unwrap_or(usize::MAX as u32) as usize
     && !remaining_candidates.is_empty()
   {
@@ -266,6 +270,11 @@ pub fn run_election(builder: &Builder) -> Result<VotingResult, VotingErrors> {
         if let Some(mut elected_winners) = result.winners {
           winners.append(&mut elected_winners); // Flatten the Option<Vec<String>> into Vec<String>
           remaining_candidates.retain(|c| !winners.contains(&c.name)); // Remove elected candidates
+          // Increment ranking spot for next selection
+          spot_position += elected_winners.len() as u32;
+          let election_stats = ElectionStats { spot_position, round_stats: result.round_stats };
+
+          all_round_stats.push(election_stats);
         }
       }
       Err(error) => {
@@ -273,12 +282,12 @@ pub fn run_election(builder: &Builder) -> Result<VotingResult, VotingErrors> {
       }
     };
   }
-  Ok(VotingResult { threshold: 0, winners: Some(winners), round_stats: vec![] })
+  Ok(ElectionResult { winners: Some(winners), stats: all_round_stats })
 }
 
 /// Runs an election (simple interface) using the instant-runoff voting
 /// algorithm.
-pub fn run_simple_election(votes: &[Vec<&str>], rules: &VoteRules) -> Result<VotingResult, VotingErrors> {
+pub fn run_simple_election(votes: &[Vec<&str>], rules: &VoteRules) -> Result<ElectionResult, VotingErrors> {
   let mut builder = Builder::new(rules)?;
 
   {
