@@ -170,8 +170,8 @@ impl Wrapper<Vec<RankedVote>> {
     for mut vote in self.0 {
       // Use the updated `match_decoded_ranked_vote_memo` function
       if let Some((round_id, proposal_ids)) = vote.parse_decoded_ranked_votes_memo(&id_str) {
-        // Update the memo with round ID and proposal IDs
-        vote.update_memo(format!("Round: {}, Proposals: {:?}", round_id, proposal_ids));
+        // Update the memo  with proposal IDs
+        vote.update_memo(format!("Votes: {:?}", proposal_ids));
         vote.proposals = proposal_ids;
         // Update vote status if conditions are met
         if tip - vote.height >= 10 {
