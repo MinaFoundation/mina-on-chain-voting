@@ -242,7 +242,7 @@ impl VoteRules {
     tiebreak_mode: TieBreakMode::UseCandidateOrder,
     overvote_rule: OverVoteRule::AlwaysSkipToNextRank,
     max_skipped_rank_allowed: MaxSkippedRank::Unlimited,
-    max_rankings_allowed: Some(12),
+    max_rankings_allowed: Some(10),
     elimination_algorithm: EliminationAlgorithm::Single,
     duplicate_candidate_mode: DuplicateCandidateMode::SkipDuplicate,
   };
