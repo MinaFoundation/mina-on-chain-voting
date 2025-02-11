@@ -122,6 +122,60 @@ Retrieve details for a specific proposal within a specified time frame. Optional
 
 ---
 
+# Ranked Voting on a MEF
+
+# Multi-Winner Proportional Election System
+
+## Overview
+
+This repository implements a **multi-winner proportional election system** using the **Instant-Runoff Voting (IRV) algorithm**. The system conducts **single-winner elections iteratively** until the required number of winners is reached or no remaining candidates are left.
+
+## Features
+
+- **Instant-Runoff Voting (IRV)**: Eliminates candidates in rounds until a winner is selected.
+- **Multi-Winner Support**: Runs multiple rounds of elections to determine multiple winners.
+- **Proportional Representation**: Ensures fair distribution of winners based on voter preferences.
+- **Detailed Election Statistics**: Provides election round insights and ranking positions.
+
+---
+
+## Endpoint
+
+### `GET /api/mef_ranked_vote/:round_id/:start_time/:end_time`
+
+Retrieve ranked voting results for a specific funding round within a given time range.
+
+### Path Parameters
+
+| Parameter    | Type      | Description                                           |
+|-------------|----------|------------------------------------------------------|
+| `round_id`  | `integer` | Unique identifier for the funding round.            |
+| `start_time`| `integer` | Start time in milliseconds unix timestamp.          |
+| `end_time`  | `integer` | End time in milliseconds unix timestamp.            |
+
+---
+
+### Ranked Voting Rules
+
+- Each voter can rank up to **8 proposals** per funding round.
+- The ranking system assigns higher weight to higher-ranked proposals.
+- Votes are aggregated and processed to determine the most preferred proposals based on ranking distribution.
+
+---
+
+### Response Details
+
+| Field         | Type            | Description                                              |
+|--------------|----------------|----------------------------------------------------------|
+| `round_id`   | `integer`       | Unique identifier of the funding round.                 |
+| `total_votes`| `integer`       | Total number of ranked votes cast by the community.     |
+| `winners`    | `array<string>` | List of winning proposals based on ranked vote results. |
+| `stats`      | `array<object>` | Detailed election statistics for each voting round.     |
+| `votes`      | `array<object>` | List of individual ranked votes submitted.              |
+
+---
+
+
 ## Software Development
 
 Install [Nix](https://nixos.org/download) and [direnv](https://direnv.net/docs/installation.html).
