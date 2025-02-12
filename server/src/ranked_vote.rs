@@ -1147,7 +1147,6 @@ fn candidate_permutation_crypto(candidates: &[(CandidateId, String)], seed: u32,
   data.iter().map(|p| p.0).collect()
 }
 
-
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -1168,7 +1167,6 @@ mod tests {
     let (_round_id, _proposal_ids) = votes[0].parse_decoded_ranked_votes_memo(round_id).unwrap();
     assert_eq!(_round_id, round_id);
     assert_eq!(_proposal_ids, proposal_ids);
-
   }
 
   #[test]
