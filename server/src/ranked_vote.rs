@@ -1146,3 +1146,158 @@ fn candidate_permutation_crypto(candidates: &[(CandidateId, String)], seed: u32,
   data.sort_by_key(|p| p.1.clone());
   data.iter().map(|p| p.0).collect()
 }
+
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_ranked_vote_decode_memo() {
+    let mut vote = RankedVote::new("1", "1", "", 100, BlockStatus::Pending, 100, 1);
+    vote.update_memo("E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi");
+    assert_eq!(vote.decode_memo().unwrap(), "MEF 1 3 1 39");
+  }
+
+  #[test]
+  fn test_parse_decoded_ranked_votes_memo() {
+    let round_id = "1";
+    let proposal_ids: Vec<&str> = vec!["3", "1", "39"];
+    let mut votes = get_test_votes();
+
+    let (_round_id, _proposal_ids) = votes[0].parse_decoded_ranked_votes_memo(round_id).unwrap();
+    assert_eq!(_round_id, round_id);
+    assert_eq!(_proposal_ids, proposal_ids);
+
+  }
+
+  #[test]
+  fn test_process_ranked_votes() {
+    let votes = get_test_votes();
+    let binding = Wrapper(votes).process_ranked_vote(1, 129);
+    let processed: Vec<RankedVote> = binding.0.values().cloned().collect();
+
+    assert_eq!(processed.len(), 10);
+
+    let a1 = processed.iter().find(|s| s.account == "1").unwrap();
+    let a2 = processed.iter().find(|s| s.account == "2").unwrap();
+
+    assert_eq!(a1.account, "1");
+    assert_eq!(a1.hash, "1");
+    assert_eq!(a1.memo, "Votes: [\"3\", \"1\", \"39\"]");
+    assert_eq!(a1.height, 331718);
+    assert_eq!(a1.status, BlockStatus::Canonical);
+    assert_eq!(a1.nonce, 1);
+
+    assert_eq!(a2.account, "2");
+    assert_eq!(a2.hash, "2");
+    assert_eq!(a2.memo, "Votes: [\"3\", \"1\", \"39\"]");
+    assert_eq!(a2.height, 341719);
+    assert_eq!(a2.status, BlockStatus::Pending);
+    assert_eq!(a2.nonce, 2);
+  }
+
+  fn get_test_votes() -> Vec<RankedVote> {
+    vec![
+      RankedVote::new(
+        "1",
+        "1",
+        "E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi",
+        331718,
+        BlockStatus::Canonical,
+        1730897878000,
+        1,
+      ),
+      RankedVote::new(
+        "2",
+        "2",
+        "E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi",
+        341719,
+        BlockStatus::Pending,
+        1730897878000,
+        2,
+      ),
+      RankedVote::new(
+        "3",
+        "3",
+        "E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi",
+        351320,
+        BlockStatus::Pending,
+        1730897878000,
+        3,
+      ),
+      RankedVote::new(
+        "4",
+        "4",
+        "E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi",
+        352721,
+        BlockStatus::Pending,
+        1730897878000,
+        4,
+      ),
+      RankedVote::new(
+        "5",
+        "5",
+        "E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi",
+        353722,
+        BlockStatus::Pending,
+        1730897878000,
+        5,
+      ),
+      RankedVote::new(
+        "6",
+        "6",
+        "E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi",
+        354723,
+        BlockStatus::Pending,
+        1730897878000,
+        6,
+      ),
+      RankedVote::new(
+        "7",
+        "7",
+        "E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi",
+        355724,
+        BlockStatus::Pending,
+        1730897878000,
+        7,
+      ),
+      RankedVote::new(
+        "8",
+        "8",
+        "E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi",
+        356725,
+        BlockStatus::Pending,
+        1730897878000,
+        8,
+      ),
+      RankedVote::new(
+        "9",
+        "9",
+        "E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi",
+        357726,
+        BlockStatus::Pending,
+        1730897878000,
+        9,
+      ),
+      RankedVote::new(
+        "10",
+        "10",
+        "E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi",
+        358727,
+        BlockStatus::Pending,
+        1730897878000,
+        10,
+      ),
+      RankedVote::new(
+        "11",
+        "11",
+        "E4Yf7epFtpM8YAsxcGVagQQKmtUpwj8nKTWMQnWbXyhg7hE6ceJhJ",
+        358728,
+        BlockStatus::Pending,
+        1730897878000,
+        11,
+      ),
+    ]
+  }
+}
