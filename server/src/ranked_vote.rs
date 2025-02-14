@@ -1195,6 +1195,27 @@ mod tests {
     assert_eq!(a2.nonce, 2);
   }
 
+  #[test]
+  fn test_ranked_vote_update_memo() {
+    let mut vote = RankedVote::new("1", "1", "Initial memo", 100, BlockStatus::Pending, 100, 1);
+    vote.update_memo("Updated memo");
+    assert_eq!(vote.memo, "Updated memo");
+  }
+
+  #[test]
+  fn test_ranked_vote_update_status() {
+    let mut vote = RankedVote::new("1", "1", "Memo", 100, BlockStatus::Pending, 100, 1);
+    vote.update_status(BlockStatus::Canonical);
+    assert_eq!(vote.status, BlockStatus::Canonical);
+  }
+
+  #[test]
+  fn test_ranked_vote_is_newer_than() {
+    let vote1 = RankedVote::new("1", "1", "Memo", 100, BlockStatus::Pending, 100, 1);
+    let vote2 = RankedVote::new("1", "1", "Memo", 101, BlockStatus::Pending, 100, 1);
+    assert!(vote2.is_newer_than(&vote1));
+  }
+
   fn get_test_votes() -> Vec<RankedVote> {
     vec![
       RankedVote::new(
