@@ -1216,6 +1216,31 @@ mod tests {
     assert!(vote2.is_newer_than(&vote1));
   }
 
+  #[test]
+  fn test_run_election() {
+    let votes = vec![
+      vec!["39", "5", "2", "1", "4", "3"],
+      vec!["39", "3", "2", "4", "1"],
+      vec!["1", "3", "39", "5", "2", "4"],
+      vec!["1", "39", "5", "2", "3", "4"],
+      vec!["2", "1", "39", "3", "4", "5"],
+      vec!["3", "4", "39", "5", "2", "1"],
+      vec!["1", "3", "39", "5", "2", "4"],
+    ];
+
+    let rules = VoteRules {
+      tiebreak_mode: TieBreakMode::UseCandidateOrder,
+      overvote_rule: OverVoteRule::AlwaysSkipToNextRank,
+      max_skipped_rank_allowed: MaxSkippedRank::Unlimited,
+      max_rankings_allowed: Some(10),
+      elimination_algorithm: EliminationAlgorithm::Single,
+      duplicate_candidate_mode: DuplicateCandidateMode::SkipDuplicate,
+    };
+
+    let result = run_simple_election(&votes, &rules).unwrap();
+    assert_eq!(result.winners.unwrap(), vec!["1", "39", "3", "5", "2", "4"]);
+  }
+
   fn get_test_votes() -> Vec<RankedVote> {
     vec![
       RankedVote::new(
