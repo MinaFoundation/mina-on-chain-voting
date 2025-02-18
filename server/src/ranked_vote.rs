@@ -1,12 +1,12 @@
 use std::{
-  collections::{HashMap, HashSet, hash_map::Entry},
+  collections::{BTreeMap, BTreeSet, btree_map::Entry},
   hash::Hash,
   ops::{Add, AddAssign},
 };
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use tracing::log::{debug, info};
+use tracing::log::{debug, error, info};
 
 use crate::{
   Ballot, BallotChoice, Builder, Candidate, DuplicateCandidateMode, ElectionResult, ElectionStats,
@@ -131,7 +131,7 @@ impl RankedVoteCandidates {
   /// will be exhausted.
   fn filtered_candidate(
     &self,
-    still_valid: &HashSet<CandidateId>,
+    still_valid: &BTreeSet<CandidateId>,
     duplicate_policy: DuplicateCandidateMode,
     overvote: OverVoteRule,
     skipped_ranks: MaxSkippedRank,
@@ -163,14 +163,14 @@ impl From<FetchTransactionResult> for RankedVote {
   }
 }
 impl Wrapper<Vec<RankedVote>> {
-  pub fn process_ranked_vote(self, id: usize, tip: i64) -> Wrapper<HashMap<String, RankedVote>> {
-    let mut map = HashMap::new();
+  pub fn process_ranked_vote(self, id: usize, tip: i64) -> Wrapper<BTreeMap<String, RankedVote>> {
+    let mut map = BTreeMap::new();
     let id_str = id.to_string();
 
     for mut vote in self.0 {
       // Use the updated `match_decoded_ranked_vote_memo` function
       if let Some((_round_id, proposal_ids)) = vote.parse_decoded_ranked_votes_memo(&id_str) {
-        // Update the memo  with proposal IDs
+        // Update the memo with proposal IDs
         vote.update_memo(format!("Votes: {:?}", proposal_ids));
         vote.proposals = proposal_ids;
         // Update vote status if conditions are met
@@ -259,30 +259,30 @@ pub fn run_election(builder: &Builder) -> Result<ElectionResult, VotingErrors> {
   let mut winners: Vec<String> = Vec::new();
   let mut remaining_candidates = builder._candidates.to_owned().unwrap_or_default();
   let mut all_round_stats: Vec<ElectionStats> = Vec::new();
-
   let mut spot_position = 0; // Track ranking spot
 
   while winners.len() < builder._rules.max_rankings_allowed.unwrap_or(usize::MAX as u32) as usize
     && !remaining_candidates.is_empty()
   {
+    info!("Running election round with {} candidates", remaining_candidates.len());
     let election = run_voting_stats(&builder._votes, &builder._rules, &Some(remaining_candidates.clone()));
     match election {
       Ok(result) => {
         if let Some(mut elected_winners) = result.winners {
-          winners.append(&mut elected_winners); // Flatten the Option<Vec<String>> into Vec<String>
-          remaining_candidates.retain(|c| !winners.contains(&c.name)); // Remove elected candidates
-          // Increment ranking spot for next selection
+          info!("{}", format!("Elected winners: {:?}", elected_winners));
+          winners.append(&mut elected_winners);
+          remaining_candidates.retain(|c| !winners.contains(&c.name));
           spot_position += elected_winners.len() as u32;
           let election_stats = ElectionStats { spot_position, round_stats: result.round_stats };
-
           all_round_stats.push(election_stats);
         }
       }
       Err(error) => {
-        eprintln!("Election failed with error: {:?}", error);
+        error!("{}", format!("Election failed with error: {:?}", error));
       }
     };
   }
+  info!("{}", "Election completed");
   Ok(ElectionResult { winners: Some(winners), stats: all_round_stats })
 }
 
@@ -290,18 +290,14 @@ pub fn run_election(builder: &Builder) -> Result<ElectionResult, VotingErrors> {
 /// algorithm.
 pub fn run_simple_election(votes: &[Vec<&str>], rules: &VoteRules) -> Result<ElectionResult, VotingErrors> {
   let mut builder = Builder::new(rules)?;
-
-  {
-    // Take everyone from the election as a valid candidate.
-    let mut cand_set: HashSet<String> = HashSet::new();
-    for ballot in votes.iter() {
-      for choice in ballot.iter() {
-        cand_set.insert(choice.to_string());
-      }
+  let mut cand_set: BTreeSet<String> = BTreeSet::new();
+  for ballot in votes.iter() {
+    for choice in ballot.iter() {
+      cand_set.insert(choice.to_string());
     }
-    let cand_vec: Vec<String> = cand_set.iter().cloned().collect();
-    builder = builder.candidates(&cand_vec)?;
   }
+  let cand_vec: Vec<String> = cand_set.iter().cloned().collect();
+  builder = builder.candidates(&cand_vec)?;
   for choices in votes.iter() {
     let cands: Vec<Vec<String>> = choices.iter().map(|c| vec![c.to_string()]).collect();
     builder.add_vote(&cands, 1)?;
@@ -311,7 +307,7 @@ pub fn run_simple_election(votes: &[Vec<&str>], rules: &VoteRules) -> Result<Ele
 
 fn candidates_from_ballots(ballots: &[Ballot]) -> Vec<Candidate> {
   // Take everyone from the election as a valid candidate.
-  let mut cand_set: HashSet<String> = HashSet::new();
+  let mut cand_set: BTreeSet<String> = BTreeSet::new();
   for ballot in ballots.iter() {
     for choice in ballot.candidates.iter() {
       if let BallotChoice::Candidate(name) = choice {
@@ -336,18 +332,13 @@ fn run_voting_stats(
   rules: &VoteRules,
   candidates_o: &Option<Vec<Candidate>>,
 ) -> Result<VotingResult, VotingErrors> {
-  info!("run_voting_stats: Processing {:?} votes", coll.len());
+  info!("Processing {} votes", coll.len());
   let candidates = candidates_o.to_owned().unwrap_or_else(|| candidates_from_ballots(coll));
-
-  debug!("run_voting_stats: candidates: {:?}, rules: {:?}", coll.len(), candidates,);
+  debug!("Candidates: {:?}", candidates);
 
   let cr: CheckResult = checks(coll, &candidates, rules)?;
   let checked_votes = cr.votes;
-  debug!(
-    "run_voting_stats: Checked votes: {:?}, detected UWIs {:?}",
-    checked_votes.len(),
-    cr.count_exhausted_uwi_first_round
-  );
+  debug!("Checked votes: {:?}, UWIs detected {:?}", checked_votes.len(), cr.count_exhausted_uwi_first_round);
   let all_candidates: Vec<(String, CandidateId)> = cr.candidates;
   {
     info!("Processing {:?} aggregated votes", checked_votes.len());
@@ -364,15 +355,15 @@ fn run_voting_stats(
   }
 
   // We are done, stop here.
-  let candidates_by_id: HashMap<CandidateId, String> =
+  let candidates_by_id: BTreeMap<CandidateId, String> =
     all_candidates.iter().map(|(cname, cid)| (*cid, cname.clone())).collect();
 
   // The candidates that are still running, in sorted order as defined by input.
   let mut cur_sorted_candidates: Vec<(String, CandidateId)> = all_candidates.clone();
+
   let mut cur_votes: Vec<VoteInternal> = checked_votes;
   let mut cur_stats: Vec<InternalRoundStatistics> = Vec::new();
 
-  // TODO: better management of the number of iterations
   while cur_stats.iter().len() < 10000 {
     let round_id = (cur_stats.iter().len() + 1) as u32;
     debug!("run_voting_stats: Round id: {:?} cur_candidates: {:?}", round_id, cur_sorted_candidates);
@@ -485,7 +476,7 @@ fn print_round_stats(
   }
 }
 
-fn get_threshold(tally: &HashMap<CandidateId, VoteCount>) -> VoteCount {
+fn get_threshold(tally: &BTreeMap<CandidateId, VoteCount>) -> VoteCount {
   let total_count: VoteCount = tally.values().cloned().sum();
   if total_count == VoteCount::EMPTY {
     VoteCount::EMPTY
@@ -499,7 +490,7 @@ fn get_threshold(tally: &HashMap<CandidateId, VoteCount>) -> VoteCount {
 
 fn round_results_to_stats(
   results: &[InternalRoundStatistics],
-  candidates_by_id: &HashMap<CandidateId, String>,
+  candidates_by_id: &BTreeMap<CandidateId, String>,
 ) -> Result<Vec<RoundStats>, VotingErrors> {
   let mut res: Vec<RoundStats> = Vec::new();
   for (idx, r) in results.iter().enumerate() {
@@ -512,7 +503,7 @@ fn round_results_to_stats(
 fn round_result_to_stat(
   stats: &InternalRoundStatistics,
   round_id: RoundId,
-  candidates_by_id: &HashMap<CandidateId, String>,
+  candidates_by_id: &BTreeMap<CandidateId, String>,
 ) -> Result<RoundStats, VotingErrors> {
   let mut rs = RoundStats {
     round: round_id,
@@ -584,7 +575,7 @@ fn run_first_round_uwi(
   candidate_names: &[(String, CandidateId)],
 ) -> Result<RoundResult, VotingErrors> {
   let tally = compute_tally(votes, candidate_names);
-  let mut elimination_stats: HashMap<CandidateId, VoteCount> = HashMap::new();
+  let mut elimination_stats: BTreeMap<CandidateId, VoteCount> = BTreeMap::new();
   for v in uwi_first_votes.iter() {
     let e = elimination_stats.entry(v.candidates.first_valid).or_insert(VoteCount::EMPTY);
     *e += v.count;
@@ -601,8 +592,11 @@ fn run_first_round_uwi(
   Ok(RoundResult { votes: all_votes, stats: full_stats, vote_threshold: VoteCount::EMPTY })
 }
 
-fn compute_tally(votes: &[VoteInternal], candidate_names: &[(String, CandidateId)]) -> HashMap<CandidateId, VoteCount> {
-  let mut tally: HashMap<CandidateId, VoteCount> = HashMap::new();
+fn compute_tally(
+  votes: &[VoteInternal],
+  candidate_names: &[(String, CandidateId)],
+) -> BTreeMap<CandidateId, VoteCount> {
+  let mut tally: BTreeMap<CandidateId, VoteCount> = BTreeMap::new();
   for (_, cid) in candidate_names.iter() {
     tally.insert(*cid, VoteCount::EMPTY);
   }
@@ -643,7 +637,7 @@ fn run_one_round(
   // Find the candidates to eliminate
   let p = find_eliminated_candidates(&tally, rules, candidate_names, num_round)?;
   let resolved_tiebreak: TiebreakSituation = p.1;
-  let eliminated_candidates: HashSet<CandidateId> = p.0.iter().cloned().collect();
+  let eliminated_candidates: BTreeSet<CandidateId> = p.0.iter().cloned().collect();
 
   // TODO strategy to pick the winning candidates
 
@@ -656,10 +650,10 @@ fn run_one_round(
   // Statistics about transfers:
   // For every eliminated candidates, keep the vote transfer, or the exhausted
   // vote.
-  let mut elimination_stats: HashMap<CandidateId, (HashMap<CandidateId, VoteCount>, VoteCount)> =
-    eliminated_candidates.iter().map(|cid| (*cid, (HashMap::new(), VoteCount::EMPTY))).collect();
+  let mut elimination_stats: BTreeMap<CandidateId, (BTreeMap<CandidateId, VoteCount>, VoteCount)> =
+    eliminated_candidates.iter().map(|cid| (*cid, (BTreeMap::new(), VoteCount::EMPTY))).collect();
 
-  let remaining_candidates: HashSet<CandidateId> = candidate_names
+  let remaining_candidates: BTreeSet<CandidateId> = candidate_names
     .iter()
     .filter_map(|p| match p {
       (_, cid) if !eliminated_candidates.contains(cid) => Some(*cid),
@@ -684,12 +678,12 @@ fn run_one_round(
       match new_first {
         None => {
           // Ballot is now exhausted. Record the exhausted vote.
-          let e = elimination_stats.entry(old_first).or_insert((HashMap::new(), VoteCount::EMPTY));
+          let e = elimination_stats.entry(old_first).or_insert((BTreeMap::new(), VoteCount::EMPTY));
           e.1 += va.count;
         }
         Some(new_first_cid) if new_first_cid != old_first => {
           // The ballot has been transfered. Record the transfer.
-          let e = elimination_stats.entry(old_first).or_insert((HashMap::new(), VoteCount::EMPTY));
+          let e = elimination_stats.entry(old_first).or_insert((BTreeMap::new(), VoteCount::EMPTY));
           let e2 = e.0.entry(new_first_cid).or_insert(VoteCount::EMPTY);
           *e2 += va.count;
         }
@@ -704,13 +698,13 @@ fn run_one_round(
 
   // Check if some candidates are winners.
   // Right now, it is simply if one candidate is left.
-  let remainers: HashMap<CandidateId, VoteCount> = tally
+  let remainers: BTreeMap<CandidateId, VoteCount> = tally
     .iter()
     .filter_map(|(cid, vc)| if eliminated_candidates.contains(cid) { None } else { Some((*cid, *vc)) })
     .collect();
 
   debug!("run_one_round: remainers: {:?}", remainers);
-  let mut winners: HashSet<CandidateId> = HashSet::new();
+  let mut winners: BTreeSet<CandidateId> = BTreeSet::new();
   // If a tiebreak was resolved in this round, do not select a winner.
   // This is just an artifact of the reference implementation.
   if resolved_tiebreak == TiebreakSituation::Clean {
@@ -746,11 +740,12 @@ fn run_one_round(
 }
 
 fn find_eliminated_candidates(
-  tally: &HashMap<CandidateId, VoteCount>,
+  tally: &BTreeMap<CandidateId, VoteCount>,
   rules: &VoteRules,
   candidate_names: &[(String, CandidateId)],
   num_round: u32,
 ) -> Result<(Vec<CandidateId>, TiebreakSituation), VotingErrors> {
+  println!("tally?: {:?} - round {:?}", tally, num_round);
   // Try to eliminate candidates in batch
   if rules.elimination_algorithm == EliminationAlgorithm::Batch {
     if let Some(v) = find_eliminated_candidates_batch(tally) {
@@ -765,7 +760,7 @@ fn find_eliminated_candidates(
   Err(VotingErrors::EmptyElection)
 }
 
-fn find_eliminated_candidates_batch(tally: &HashMap<CandidateId, VoteCount>) -> Option<Vec<CandidateId>> {
+fn find_eliminated_candidates_batch(tally: &BTreeMap<CandidateId, VoteCount>) -> Option<Vec<CandidateId>> {
   // Sort the candidates in increasing tally.
   let mut sorted_tally: Vec<(CandidateId, VoteCount)> = tally.iter().map(|(&cid, &vc)| (cid, vc)).collect();
   sorted_tally.sort_by_key(|(_, vc)| *vc);
@@ -812,7 +807,7 @@ enum TiebreakSituation {
 
 // Elimination method for single candidates.
 fn find_eliminated_candidates_single(
-  tally: &HashMap<CandidateId, VoteCount>,
+  tally: &BTreeMap<CandidateId, VoteCount>,
   tiebreak: TieBreakMode,
   candidate_names: &[(String, CandidateId)],
   num_round: u32,
@@ -828,12 +823,15 @@ fn find_eliminated_candidates_single(
     debug!("find_eliminated_candidates_single: Only one candidate left in tally, no one to eliminate: {:?}", tally);
     return None;
   }
+
   assert!(tally.len() >= 2);
 
   let min_count: VoteCount = *tally.values().min().expect("No votes found");
 
   let all_smallest: Vec<CandidateId> =
     tally.iter().filter_map(|(cid, vc)| if *vc <= min_count { Some(cid) } else { None }).cloned().collect();
+  println!("find_eliminated_candidates_single: all_smallest: {:?}", all_smallest);
+
   debug!("find_eliminated_candidates_single: all_smallest: {:?}", all_smallest);
   assert!(!all_smallest.is_empty());
 
@@ -845,7 +843,7 @@ fn find_eliminated_candidates_single(
   // Look at the tiebreak mode:
   let mut sorted_candidates: Vec<CandidateId> = match tiebreak {
     TieBreakMode::UseCandidateOrder => {
-      let candidate_order: HashMap<CandidateId, usize> =
+      let candidate_order: BTreeMap<CandidateId, usize> =
         candidate_names.iter().enumerate().map(|(idx, (_, cid))| (*cid, idx)).collect();
       let mut res = all_smallest;
       res.sort_by_key(|cid| candidate_order.get(cid).expect("Candidate not found in order"));
@@ -910,7 +908,7 @@ fn check_advance_rules(
   skipped_ranks: MaxSkippedRank,
 ) -> Option<AdvanceRuleCheck> {
   if duplicate_policy == DuplicateCandidateMode::Exhaust {
-    let mut seen_cids: HashSet<CandidateId> = HashSet::new();
+    let mut seen_cids: BTreeSet<CandidateId> = BTreeSet::new();
     for choice in initial_slice.iter() {
       match *choice {
         Choice::Filled(cid) if seen_cids.contains(&cid) => {
@@ -976,7 +974,7 @@ fn check_advance_rules(
 // to UWI and then exhausts it.
 fn advance_voting(
   choices: &[Choice],
-  still_valid: &HashSet<CandidateId>,
+  still_valid: &BTreeSet<CandidateId>,
   duplicate_policy: DuplicateCandidateMode,
   overvote: OverVoteRule,
   skipped_ranks: MaxSkippedRank,
@@ -1005,7 +1003,7 @@ fn advance_voting(
 // For the 1st round, the initial choice may also be undeclared.
 fn advance_voting_initial(
   choices: &[Choice],
-  still_valid: &HashSet<CandidateId>,
+  still_valid: &BTreeSet<CandidateId>,
   duplicate_policy: DuplicateCandidateMode,
   overvote: OverVoteRule,
   skipped_ranks: MaxSkippedRank,
@@ -1044,12 +1042,12 @@ struct CheckResult {
 // Candidates are returned in the same order.
 fn checks(coll: &[Ballot], reg_candidates: &[Candidate], rules: &VoteRules) -> Result<CheckResult, VotingErrors> {
   debug!("checks: coll size: {:?}", coll.len());
-  let blacklisted_candidates: HashSet<String> =
+  let blacklisted_candidates: BTreeSet<String> =
     reg_candidates.iter().filter_map(|c| if c.excluded { Some(c.name.clone()) } else { None }).collect();
-  let candidates: HashMap<String, CandidateId> =
+  let candidates: BTreeMap<String, CandidateId> =
     reg_candidates.iter().enumerate().map(|(idx, c)| (c.name.clone(), CandidateId((idx + 1) as u32))).collect();
 
-  let valid_cids: HashSet<CandidateId> = candidates.values().cloned().collect();
+  let valid_cids: BTreeSet<CandidateId> = candidates.values().cloned().collect();
 
   // The votes that are validated and that have a candidate from the first round
   let mut validated_votes: Vec<VoteInternal> = vec![];
@@ -1226,6 +1224,7 @@ mod tests {
       vec!["2", "1", "39", "3", "4", "5"],
       vec!["3", "4", "39", "5", "2", "1"],
       vec!["1", "3", "39", "5", "2", "4"],
+      vec!["5", "2", "39", "4", "3", "5"],
     ];
 
     let rules = VoteRules {
@@ -1233,12 +1232,29 @@ mod tests {
       overvote_rule: OverVoteRule::AlwaysSkipToNextRank,
       max_skipped_rank_allowed: MaxSkippedRank::Unlimited,
       max_rankings_allowed: Some(10),
-      elimination_algorithm: EliminationAlgorithm::Single,
+      elimination_algorithm: EliminationAlgorithm::Batch,
       duplicate_candidate_mode: DuplicateCandidateMode::SkipDuplicate,
     };
 
     let result = run_simple_election(&votes, &rules).unwrap();
     assert_eq!(result.winners.unwrap(), vec!["1", "39", "3", "5", "2", "4"]);
+  }
+
+  #[test]
+  fn test_run_election_3_votes() {
+    let votes = vec![vec!["2", "4", "1", "3"], vec!["3", "1", "39"], vec!["5", "4", "1", "39"]];
+
+    let rules = VoteRules {
+      tiebreak_mode: TieBreakMode::UseCandidateOrder,
+      overvote_rule: OverVoteRule::AlwaysSkipToNextRank,
+      max_skipped_rank_allowed: MaxSkippedRank::Unlimited,
+      max_rankings_allowed: Some(10),
+      elimination_algorithm: EliminationAlgorithm::Batch,
+      duplicate_candidate_mode: DuplicateCandidateMode::SkipDuplicate,
+    };
+
+    let result = run_simple_election(&votes, &rules).unwrap();
+    assert_eq!(result.winners.unwrap(), vec!["2", "4", "1", "3", "39", "5"]);
   }
 
   fn get_test_votes() -> Vec<RankedVote> {
