@@ -185,8 +185,8 @@ impl Wrapper<Vec<RankedVote>> {
           }
           Entry::Occupied(mut e) => {
             let current_vote = e.get_mut();
-            if !vote.is_newer_than(current_vote) {
-              // Avoid updating the vote if it is newer
+            if vote.is_newer_than(current_vote) {
+              // Allow updating the vote if it is newer
               *current_vote = vote;
             }
           }
@@ -1173,7 +1173,7 @@ mod tests {
     let binding = Wrapper(votes).process_ranked_vote(1, 129);
     let processed: Vec<RankedVote> = binding.0.values().cloned().collect();
 
-    assert_eq!(processed.len(), 10);
+    assert_eq!(processed.len(), 9);
 
     let a1 = processed.iter().find(|s| s.account == "1").unwrap();
     let a2 = processed.iter().find(|s| s.account == "2").unwrap();
@@ -1278,10 +1278,10 @@ mod tests {
         2,
       ),
       RankedVote::new(
+        "1",
         "3",
-        "3",
-        "E4YkwtLx9t8gRCWWoc8cACHxKFSywt23uaGKTfmkwF1sNMh87FMEi",
-        351320,
+        "E4YntdXBbuz762QEcsaGicCkS86iZqzyKc8DUM9uWi1fBZ1JUeiDn",
+        331717,
         BlockStatus::Pending,
         1730897878000,
         3,
