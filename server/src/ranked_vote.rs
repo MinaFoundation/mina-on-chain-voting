@@ -1227,31 +1227,47 @@ mod tests {
       vec!["5", "2", "39", "4", "3", "5"],
     ];
 
-    let rules = VoteRules {
-      tiebreak_mode: TieBreakMode::UseCandidateOrder,
-      overvote_rule: OverVoteRule::AlwaysSkipToNextRank,
-      max_skipped_rank_allowed: MaxSkippedRank::Unlimited,
-      max_rankings_allowed: Some(10),
-      elimination_algorithm: EliminationAlgorithm::Batch,
-      duplicate_candidate_mode: DuplicateCandidateMode::SkipDuplicate,
-    };
+    let rules = VoteRules::default();
 
     let result = run_simple_election(&votes, &rules).unwrap();
     assert_eq!(result.winners.unwrap(), vec!["1", "39", "3", "5", "2", "4"]);
   }
+  #[test]
+  fn test_run_election_eleven_votes() {
+    let votes = vec![
+      vec!["5", "4", "1", "39"],
+      vec!["4", "2"],
+      vec!["3", "4", "39", "5", "2", "1"],
+      vec!["1", "2", "3", "4"],
+      vec!["1", "3", "39", "5", "2", "4"],
+      vec!["1", "39", "3", "5", "2", "4"],
+      vec!["2", "1", "39", "3", "4", "5"],
+      vec!["5", "39", "3", "2", "4", "1"],
+      vec!["39", "5", "2", "1", "4", "3"],
+      vec!["4", "2"],
+      vec!["3"],
+    ];
+
+    let rules = VoteRules::default();
+
+    let result = run_simple_election(&votes, &rules).unwrap();
+    assert_eq!(result.winners.unwrap(), vec!["1", "39", "2", "3", "4", "5"]);
+  }
 
   #[test]
-  fn test_run_election_3_votes() {
+  fn test_run_election_two_votes() {
+    let votes = vec![vec!["2", "4", "1", "3"], vec!["3", "1", "39"]];
+    let rules = VoteRules::default();
+
+    let result = run_simple_election(&votes, &rules).unwrap();
+    assert_eq!(result.winners.unwrap(), vec!["2", "3", "1", "39", "4"]);
+  }
+
+  #[test]
+  fn test_run_election_three_votes() {
     let votes = vec![vec!["2", "4", "1", "3"], vec!["3", "1", "39"], vec!["5", "4", "1", "39"]];
 
-    let rules = VoteRules {
-      tiebreak_mode: TieBreakMode::UseCandidateOrder,
-      overvote_rule: OverVoteRule::AlwaysSkipToNextRank,
-      max_skipped_rank_allowed: MaxSkippedRank::Unlimited,
-      max_rankings_allowed: Some(10),
-      elimination_algorithm: EliminationAlgorithm::Batch,
-      duplicate_candidate_mode: DuplicateCandidateMode::SkipDuplicate,
-    };
+    let rules = VoteRules::default();
 
     let result = run_simple_election(&votes, &rules).unwrap();
     assert_eq!(result.winners.unwrap(), vec!["2", "4", "1", "3", "39", "5"]);
