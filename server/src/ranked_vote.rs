@@ -197,6 +197,20 @@ impl Wrapper<Vec<RankedVote>> {
     Wrapper(map)
   }
 }
+
+impl Wrapper<BTreeMap<String, RankedVote>> {
+  pub fn to_vec(&self) -> Wrapper<Vec<RankedVote>> {
+    Wrapper(self.0.values().cloned().collect())
+  }
+}
+
+impl Wrapper<BTreeMap<String, RankedVote>> {
+  pub fn sort_by_timestamp(&mut self) -> &Self {
+    self.to_vec().0.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+    self
+  }
+}
+
 #[derive(Eq, PartialEq, Debug, Clone, Copy, PartialOrd, Ord, Hash)]
 struct VoteCount(u64);
 
