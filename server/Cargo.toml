@@ -10,7 +10,7 @@ axum = { version = "0.7.5", features = ["macros"] }
 bigdecimal = "0.4.5"
 bs58 = { version = "0.4.0", features = ["check"] }
 bytes = "1.9.0"
-clap = { version = "4.1.4", features = ["derive", "env"] }
+clap = { version = "4.5.31", features = ["derive", "env"] }
 derive_more = { version = "1.0.0", features = ["full"] }
 diesel = { version = "2.2.6", features = ["postgres", "r2d2", "numeric"] }
 diesel-derive-enum = { version = "2.0.0", features = ["postgres"] }
