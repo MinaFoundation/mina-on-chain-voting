@@ -81,6 +81,19 @@
       "url": "",
       "version": "V2",
       "network": "devnet"
+    },
+    {
+      "id": 6,
+      "key": "MIP53",
+      "category": "Core",
+      "title": "Demo MIP53",
+      "description": "",
+      "start_time": 1753702740000,
+      "end_time": 1754307832603,
+      "epoch": 31,
+      "url": "",
+      "version": "V2",
+      "network": "devnet"
     }
   ]
 }

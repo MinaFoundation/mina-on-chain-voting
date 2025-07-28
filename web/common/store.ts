@@ -61,7 +61,24 @@ export const getProposalResults = async (id: number | string) => {
 export type GetProposalResultsResult = Awaited<ReturnType<typeof getProposalResults>>;
 
 export const getProposalList = async () => {
-  const res = await safeFetch('/api/proposals');
+  let res = await safeFetch('/api/proposals');
+  res =     [...res,
+    {
+      "id": 3,
+      "key": "MIP1_FORCED",
+      "category": "Core",
+      "title": "Remove supercharged rewards",
+      "description": "Removing the short-term incentive of supercharged rewards.",
+      "start_time": Date.now() - 24 * 60 * 60 * 1000,
+      "end_time": Date.now() + 6 * 24 * 60 * 60 * 1000,
+      "epoch": 46,
+      "ledger_hash": "jxQXzUkst2L9Ma9g9YQ3kfpgB5v5Znr1vrYb1mupakc5y7T89H8",
+      "url": "https://github.com/MinaProtocol/MIPs/blob/main/MIPS/mip-0001-remove-supercharged-rewards.md",
+      "version": "V1",
+      "network": "devnet"
+    },
+  ];
+  // console.log(res);
   const data = ProposalListParser.parse(QueryKeys.PROPOSAL, res);
   const processedProposals = data.map((row) => processProposal(row));
   return processedProposals;

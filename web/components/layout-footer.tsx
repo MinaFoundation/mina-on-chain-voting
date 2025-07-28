@@ -7,7 +7,7 @@ export const Footer = () => {
         {/* Main Footer Content */}
         <div className="flex flex-col lg:flex-row justify-between items-center lg:items-start space-y-4 lg:space-y-0">
           {/* Copyright Text */}
-          <p className="text-gray-500 text-sm">© 2024 Mina Foundation. All rights reserved.</p>
+          <p className="text-gray-500 text-sm">© {new Date().getFullYear()} Mina Foundation. All rights reserved.</p>
 
           {/* Links */}
           <div className="flex flex-col lg:flex-row items-center space-y-2 lg:space-y-0 lg:space-x-6">

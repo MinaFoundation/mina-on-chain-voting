@@ -4,7 +4,7 @@ On-Chain Voting is a protocol developed to help with governing the Mina L1 block
 
 ## Vote With [Auro Wallet](https://www.aurowallet.com/)
 
-1. Ensure you're on the correct network (in this case devnet).
+1. Ensure you're on the correct network (in this case `devnet`).
 2. Click on your address to copy it to the clipboard (we'll be using it in the next step).
 3. Click on "Send."
 
@@ -66,7 +66,7 @@ contain: 'MEF1 NO 1'.
 ```
 
 *Vote With Auro Wallet*
-- Ensure you're on the correct network (e.g., devnet).
+- Ensure you're on the correct network (e.g., `devnet`).
 - Click on your wallet address to copy it to the clipboard (you’ll need it in step 4).
 - Navigate to the Send feature in the wallet.
 - In the To field, paste your own wallet address.
